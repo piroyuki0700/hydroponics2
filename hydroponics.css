@@ -1,0 +1,195 @@
+@charset "utf-8";
+
+html{
+  height:100%;
+}
+body{
+  background-color: lightgray;
+  height:100%;
+}
+
+div.content_frame {
+  width: 1024px;
+  height: 600px;
+/*
+  width: 100%;
+  height: 100%;
+  min-width: 500px;
+  min-height: 300px;
+*/
+  overflow: hidden;
+  font-size: 1.8em;
+  background-color: white;
+}
+
+div.content_left {
+  width: 20%;
+  height: 100%;
+  float: left;
+}
+
+div.content_right {
+  width: 80%;
+  height: 100%;
+  float: right;
+}
+
+div.content_logo {
+  background: url("pirolab_logo_circle.png") no-repeat center top;
+  background-size: 170px;
+  width: 100%;
+  height: 30%;
+  position: relative;
+}
+
+button.reconnect_button {
+  left: 0px;
+  top: 0px;
+  position: absolute;
+}
+
+button.setting_button {
+  right: 0px;
+  bottom: 0px;
+  position: absolute;
+}
+
+button.cycle_button {
+  position: relative;
+  top: 50%;
+  transform: translateY(-20%);
+}
+
+div.content_title {
+  width: 100%;
+  height: 15%;
+  font-weight: bold;
+}
+
+div.content_cycle {
+  background: url("hydroponics.png") no-repeat center center;
+  background-size: 170px;
+  width: 100%;
+  height: 35%;
+}
+
+div.content_datetime {
+  width: 100%;
+  height: 20%;
+  color: white;
+}
+
+div.content_date {
+  font-size: 0.8em;
+}
+
+div.content_picture {
+  background-color: slategray;
+  background-size: cover;
+  width: 100%;
+  height: 80%;
+  text-align: right;
+  padding-top: 3px;
+  padding-right: 5px;
+}
+
+span.picture_datetime {
+/*
+  right: 10px;
+  bottom: 0px;
+*/
+  background-color: rgba(0,0,0, 0.3);
+  color: white;
+  padding: 0px 5px;
+}
+
+div.content_bottom {
+  width: 100%;
+  height: 20%;
+  position: relative;
+}
+
+textarea.content_message {
+  width: 100%;
+  height: 50%;
+  font-size: 0.8em;
+}
+
+div.content_full {
+  width: 100%;
+  height: 100%;
+}
+
+div.content_top {
+  width: 100%;
+  height: 10%;
+}
+
+div.content_main {
+  width: 100%;
+  height: 90%;
+}
+
+div.content_control {
+  width: 60%;
+  height: 100%;
+  float: left;
+}
+
+div.content_info {
+  width: 40%;
+  height: 100%;
+  float: right;
+  text-align: center;
+}
+div.content_countdown {
+  font-size: 2.5em;
+  font-weight: bold;
+}
+
+div.modal_result_area {
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+div.modal_message_area {
+  font-size: 1.5em;
+}
+
+button.command_button {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+input.input_number { /* 名前変える */
+  width: 3em;
+  size: 3em;
+  text-align: right;
+}
+
+table {
+  font-size: 0.7em;
+}
+
+div.logo_high {
+  height: 35%
+}
+
+.debug_border {
+  border: solid red 1px;
+}
+
+.debug_fill {
+  background-color: green;
+}
+
+/*
+div {
+  border: solid blue 1px;
+}
+*/
+
+.lightgray {
+  background-color: LightGray;
+}
+
