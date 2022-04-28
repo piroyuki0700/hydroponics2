@@ -1,0 +1,11 @@
+[Unit]
+Description=hydroponics http server
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m http.server --directory /home/pi/work/hydroponics2/
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target
