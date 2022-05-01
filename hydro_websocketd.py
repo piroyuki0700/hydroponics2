@@ -417,14 +417,33 @@ class CHydroMainController():
 		report_no = self.db_manage.insert_report(report)
 		self.logger.info(f"report No.{report_no} created.")
 
+		self.logger.info(json.dumps(report))
 		symbol = {'success': '〇', 'warning': '△', 'danger': '×'}
-		message = ("【自動送信】"
-			+ f"気温 {report['air_temp']}℃({symbol[report['air_temp_status']]})、"
-			+ f"湿度 {report['humidity']}％({symbol[report['humidity_status']]})、"
-			+ f"水温 {report['water_temp']}℃({symbol[report['water_temp_status']]})、"
-			+ f"水位 {report['water_level']}％ {report['distance']}cm ({symbol[report['water_level_status']]})、"
-			+ f"濃度 EC{report['tds_level']}({symbol[report['tds_level_status']]})、"
-			+ f"明るさ {report['brightness']}")
+		message = "【自動送信】"
+		if 'air_temp' in report:
+			message += f"気温 {report['air_temp']}℃({symbol[report['air_temp_status']]})、"
+		else:
+			message += "気温 －、"
+		if 'humidity' in report:
+			message += f"湿度 {report['humidity']}％({symbol[report['humidity_status']]})、"
+		else:
+			message += "湿度 －、"
+		if 'water_temp' in report:
+			message += f"水温 {report['water_temp']}℃({symbol[report['water_temp_status']]})、"
+		else:
+			message += "水温 －、"
+		if 'water_level' in report:
+			message += f"水位 {report['water_level']}％ {report['distance']}cm ({symbol[report['water_level_status']]})、"
+		else:
+			message += "水位 －、"
+		if 'tds_level' in report:
+			message += f"濃度 EC{report['tds_level']}({symbol[report['tds_level_status']]})、"
+		else:
+			message += "濃度 －、"
+		if 'brightness' in report:
+			message += f"明るさ {report['brightness']}"
+		else:
+			message += "明るさ －"
 
 		# select led color from total status
 		led_color = "green"
