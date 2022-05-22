@@ -144,8 +144,8 @@ class CHydroRaspiController():
 		measured = False
 		for i in range(RETRY_DISTANCE_MAX):
 			distance = self.getSonar()
-			self.logger.debug(f"{i}: {distance}")
-			if 0 < distance and distance < 100:
+			self.logger.debug(f"count:{i}: {distance}")
+			if 0 < distance and distance < 50:
 				measured = True
 				break
 			time.sleep(RETRY_DISTANCE_DELAY)
@@ -155,7 +155,9 @@ class CHydroRaspiController():
 			# %を計算（0～100に制限）
 			water_level = int((WATER_LEVEL_MAX - distance) * 100 / WATER_LEVEL_FULL)
 			water_level = min(100, max(water_level, 0))
-			result = {'distance': float(f"{distance:.1f}"), 'water_level': water_level}
+			self.logger.debug(f"distance:{distance} water_level:{water_level}")
+			if 0 < water_level:
+				result = {'distance': float(f"{distance:.1f}"), 'water_level': water_level}
 
 		return result
 

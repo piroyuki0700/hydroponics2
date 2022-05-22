@@ -445,6 +445,8 @@ class CHydroMainController():
 		else:
 			message += "明るさ －"
 
+		self.logger.debug(message)
+
 		# select led color from total status
 		led_color = "green"
 		if report['total_status'] == 'danger':
@@ -687,7 +689,7 @@ class CHydroMainController():
 		distance = data['distance']
 		self.logger.info(f"water_level = {level}%")
 
-		if 0 == distance:
+		if None == distance or 0 == distance:
 			message = f"水位測定失敗 distance={distance}"
 		elif level < (self.schedule['refill_limit']):
 			available = self.raspi_ctl.subpump_available()
@@ -759,6 +761,10 @@ class CHydroMainController():
 
 		except twitter.error.TwitterError as e:
 			self.logger.error(f"Twitter Error: {e}")
+			return False
+
+		except Exception as e:
+			self.logger.error(f"Unknown exception: {e}")
 			return False
 
 	def line_notify(self, message, filename=None):
