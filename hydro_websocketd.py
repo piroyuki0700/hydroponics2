@@ -687,7 +687,10 @@ class CHydroMainController():
 		data = self.raspi_ctl.measure_water_level()
 		level = data['water_level']
 		distance = data['distance']
-		self.logger.info(f"water_level = {level}%")
+		if None == level:
+			self.logger.info("could not get water_level")
+		else:
+			self.logger.info(f"water_level = {level}%")
 
 		if None == distance or 0 == distance:
 			message = f"水位測定失敗 distance={distance}"
@@ -771,14 +774,20 @@ class CHydroMainController():
 		self.logger.info("called")
 		token = self.db_manage.get_sns_token()
 
-		# line api
-		payload = {'message': message}
-		headers = {'Authorization': 'Bearer ' + token['line_access_token']}
-		files = {}
-		if filename != None:
-			files['imageFile'] = open(filename, "rb")
-		response = requests.post('https://notify-api.line.me/api/notify', data=payload, headers=headers, files=files)
-		return response.text
+		try:
+			# line api
+			payload = {'message': message}
+			headers = {'Authorization': 'Bearer ' + token['line_access_token']}
+			files = {}
+			if filename != None:
+				files['imageFile'] = open(filename, "rb")
+			response = requests.post('https://notify-api.line.me/api/notify', data=payload, headers=headers, files=files)
+			self.logger.info(response.text)
+			return True
+
+		except Exception as e:
+			self.logger.error(f"Unknown exception: {e}")
+			return False
 
 	def test_tweet(self, request):
 		ret = self.tweet("websocketサーバーからのtweetテスト")
