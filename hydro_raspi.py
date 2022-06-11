@@ -34,6 +34,8 @@ gpio_air = 22
 gpio_trig = 23
 gpio_echo = 24
 MAX_DISTANCE = 220
+VALID_DISTANCE_MIN = 3
+VALID_DISTANCE_MAX = 30
 WATER_LEVEL_MAX = 29
 WATER_LEVEL_FULL = 20
 
@@ -145,7 +147,7 @@ class CHydroRaspiController():
 		for i in range(RETRY_DISTANCE_MAX):
 			distance = self.getSonar()
 			self.logger.debug(f"count:{i}: {distance}")
-			if 0 < distance and distance < 50:
+			if VALID_DISTANCE_MIN <= distance and distance <= VALID_DISTANCE_MAX:
 				measured = True
 				break
 			time.sleep(RETRY_DISTANCE_DELAY)

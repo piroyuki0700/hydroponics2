@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2022.05.29');
+  $('#version').text('Ver.2022.06.11');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -414,6 +414,14 @@ function cycleButtonClick() {
 // 　一時的なデータなので直接受け取る。websocketのbroadcastはしない。
 //
 function reloadButtonClick() {
+  const sensors = new Array('air_temp', 'humidity', 'water_temp', 'water_level', 'tds_level', 'brightness');
+
+  //一時的に無効の色に変える
+  for (let i = 0; i < sensors.length; i++) {
+    const item = '#sensor_' + sensors[i];
+    $(item).removeClass("bg-success").removeClass("bg-warning").removeClass("bg-danger").addClass("bg-secondary");
+  }
+
   websocket_send({'command': 'tmp_report'});
 }
 
