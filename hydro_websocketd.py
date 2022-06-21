@@ -738,7 +738,7 @@ class CHydroMainController():
 		self.websocketd.broadcast(self.make_result(True, message))
 
 		data = {'command': 'refill_record', 'on_seconds':  result['past'], 'level_before': level_before, 'level_after': level_after,
-			'refilled_at': datetime.now()}
+			'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
 		self.db_manage.insert_refill_record(data)
 		self.websocketd.broadcast(data)
 
