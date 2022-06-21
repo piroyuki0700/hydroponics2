@@ -396,7 +396,9 @@
         <i class="fa fa-bug text-secondary m-2"> デバッグ用</i>
         <div class="mt-1">
          <span>
-          <button onclick="reconnectButtonClick()" class="btn btn-secondary command_button mr-3">websocket再接続</button>
+          <span class="small">websocket</span>
+          <button onclick="reconnectButtonClick()" class="btn btn-secondary command_button">接続</button>
+          <button onclick="disconnectButtonClick()" class="btn btn-secondary command_button">切断</button>
          </span>
          <span>
           <button onclick="ledButtonClick('blue',  'on')" class="btn btn-primary command_button ml-3">ON</button>

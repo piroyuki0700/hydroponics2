@@ -48,6 +48,19 @@ function reconnectButtonClick()
 }
 
 //
+// 切断ボタン
+//
+function disconnectButtonClick()
+{
+  if (webSocket == null) {
+    printDebugMessage("websocket is not connected.")
+  } else {
+    connectRetry = false;
+    webSocket.close();
+  }
+}
+
+//
 // メインページへ移動
 //
 function goMain()
