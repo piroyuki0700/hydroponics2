@@ -117,6 +117,7 @@ class CHydroMainController():
 	future_subpump = None
 	command_table = None
 	notify_sensor_error = True
+	prev_level = 100
 
 	# keep latest schedule setting here
 	schedule = None

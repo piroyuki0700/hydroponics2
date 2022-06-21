@@ -11,7 +11,8 @@ import threading
 import logging
 import json
 
-DATABASE_ID = 'hydro2022summer'
+DATABASE_ID = 'hydro2022spring'
+#DATABASE_ID = 'hydro2022summer'
 #DATABASE_ID = 'hydroponics1_test'
 
 class CHydroDatabaseManager():
