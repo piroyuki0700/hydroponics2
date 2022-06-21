@@ -192,4 +192,13 @@ div {
 .lightgray {
   background-color: LightGray;
 }
+.system_switch {
+  background-color: lightcyan;
+  border: solid slategray 1px;
+}
 
+td.vmiddle {
+  vertical-align: middle;
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+}

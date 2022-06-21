@@ -311,6 +311,7 @@ class CHydroMainController():
 		data.update(self.db_manage.get_sensor_limit())
 		data.update(self.db_manage.get_pump_status())
 		data.update(self.db_manage.get_latest_picture(SAVE_PICTURE_DIR))
+		data.update(self.db_manage.get_latest_refill_record())
 		report = self.db_manage.get_latest_report()
 		if len(report):
 			status = self.evaluate(report)
@@ -481,7 +482,8 @@ class CHydroMainController():
 
 	def trigger_refill(self):
 		self.logger.debug("called")
-		self.subpump_refill()
+		if self.schedule['refill_active']:
+			self.subpump_refill()
 
 	def tmp_report(self, request):
 		loop = asyncio.get_running_loop()
@@ -695,16 +697,20 @@ class CHydroMainController():
 		if None == distance or 0 == distance:
 			message = f"水位測定失敗 distance={distance}"
 		elif level < (self.schedule['refill_limit']):
-			available = self.raspi_ctl.subpump_available()
-			if available:
-				self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
-				message = f"水位{level}％ サブポンプ動作開始"
+			if self.prev_level < (self.schedule['refill_limit']):
+				available = self.raspi_ctl.subpump_available()
+				if available:
+					self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
+					message = f"水位{level}％ サブポンプ動作開始"
+				else:
+					message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
+					self.line_notify(message)
 			else:
-				message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
-				self.line_notify(message)
+				message = f"水位{level}％、次回補充"
 		else:
 			message = f"水位{level}％、問題なし"
 
+		self.prev_level = level;
 		return self.make_result(available, message)
 
 	def subpump_main(self, level_before):
@@ -725,8 +731,15 @@ class CHydroMainController():
 		message += f"水位{level_before}％→{level_after}％（+{level_plus}％）"
 		self.logger.debug(message)
 
+		self.prev_level = level_after;
+
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
+
+		data = {'command': 'refill_record', 'on_seconds':  result['past'], 'level_before': level_before, 'level_after': level_after,
+			'refilled_at': datetime.now()}
+		self.db_manage.insert_refill_record(data)
+		self.websocketd.broadcast(data)
 
 	def subpump_available(self, request=None):
 		available = self.raspi_ctl.subpump_available()

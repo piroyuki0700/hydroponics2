@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2022.06.11');
+  $('#version').text('Ver.2022.06.21');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -139,6 +139,7 @@ function websocket_message(event)
       setValueSchedule(data);
       setValueSensorLimit(data);
       setValuePumpStatus(data);
+      setValueRefillRecord(data);
       break;
 
     case 'report':
@@ -167,6 +168,10 @@ function websocket_message(event)
 
     case 'tmp_picture':
       setValueTmpPicture(data);
+      break;
+
+    case 'refill_record':
+      setValueRefillRecord(data);
       break;
 
     case 'result':
@@ -289,6 +294,7 @@ function setValueSchedule(data)
   }
 
   $('input[name="schedule_active"]').bootstrapToggle(data['schedule_active']?'on':'off');
+  $('input[name="refill_active"]').bootstrapToggle(data['refill_active']?'on':'off');
   $('input[name="refill_limit"]').val(data['refill_limit']);
   $('input[name="refill_min"]').val(data['refill_min']);
   $('input[name="refill_max"]').val(data['refill_max']);
@@ -400,6 +406,12 @@ function setValueTmpPicture(data) {
   }
 }
 
+function setValueRefillRecord(data) {
+    if ('refilled_at' in data) {
+      message = data['level_before'] + "→" + data['level_after'] + "(" + data['on_seconds'] + " sec) " + data['refilled_at'];
+      $('#refill_record').text(message);
+    }
+}
 //
 // メイン：ポンプボタン
 //
@@ -475,6 +487,7 @@ function scheduleCommitClick() {
 
   // トグルスイッチの値の追加
   data["schedule_active"]  = $('input[name="schedule_active"]').prop("checked")?"1":"0";
+  data["refill_active"]  = $('input[name="refill_active"]').prop("checked")?"1":"0";
   data["notify_active"]    = $('input[name="notify_active"]').prop("checked")?"1":"0";
   data["emergency_active"] = $('input[name="emergency_active"]').prop("checked")?"1":"0";
 
@@ -496,6 +509,7 @@ function scheduleCommitClick() {
 // （resetではなくデータベースから取得した値に戻す必要がある）
 //
 function scheduleCancelClick() {
+  $('#schedule_form').prop('disabled', true);
   setValueSchedule(master);
 }
 

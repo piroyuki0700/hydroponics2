@@ -199,6 +199,10 @@ class CHydroDatabaseManager():
 		self.logger.debug("called")
 		return self.getlatest('report')
 
+	def get_latest_refill_record(self):
+		self.logger.debug("called")
+		return self.getlatest('refill_record')
+
 	def set_basic(self, data):
 		self.logger.debug("called")
 		now = datetime.now()
@@ -248,6 +252,9 @@ class CHydroDatabaseManager():
 		self.logger.debug("called")
 		return self.insert("report", data)
 
+	def insert_refill_record(self, data):
+		self.logger.debug("called")
+		return self.insert("refill_record", data)
 #
 # テスト用
 #
