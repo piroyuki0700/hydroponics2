@@ -476,6 +476,7 @@ class CHydroMainController():
 			self.line_notify(f"## 危険 ##\n{message}", picture_path)
 
 		self.websocketd.broadcast(report)
+		self.prev_level = report['water_level'];
 
 	def trigger_stop(self):
 		self.logger.debug("called")
@@ -711,7 +712,6 @@ class CHydroMainController():
 		else:
 			message = f"水位{level}％、問題なし"
 
-		self.prev_level = level;
 		return self.make_result(available, message)
 
 	def subpump_main(self, level_before):
@@ -731,8 +731,6 @@ class CHydroMainController():
 		level_plus = level_after - level_before
 		message += f"水位{level_before}％→{level_after}％（+{level_plus}％）"
 		self.logger.debug(message)
-
-		self.prev_level = level_after;
 
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
