@@ -273,9 +273,11 @@ class CHydroRaspiController():
 
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
+		self.logger.debug("called")
 		GPIO.add_event_detect(gpio_subp_level, GPIO.FALLING, self.subpump_empty, 1000)
 
 		start_time = datetime.now()
+		self.logger.debug("start_time: " + start_time.strftime('%Y/%m/%d %H:%M:%S'))
 		self.subpump_switch(True)
 
 		ret = self.event_subpump.wait(max)

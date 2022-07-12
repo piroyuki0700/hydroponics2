@@ -476,7 +476,8 @@ class CHydroMainController():
 			self.line_notify(f"## 危険 ##\n{message}", picture_path)
 
 		self.websocketd.broadcast(report)
-		self.prev_level = report['water_level'];
+		if 'water_level' in report:
+			self.prev_level = report['water_level'];
 
 	def trigger_stop(self):
 		self.logger.debug("called")
@@ -698,8 +699,8 @@ class CHydroMainController():
 
 		if None == distance or 0 == distance:
 			message = f"水位測定失敗 distance={distance}"
-		elif level < (self.schedule['refill_limit']):
-			if self.prev_level < (self.schedule['refill_limit']):
+		elif level < self.schedule['refill_limit']:
+			if self.prev_level < (self.schedule['refill_limit'] * 1.5):
 				available = self.raspi_ctl.subpump_available()
 				if available:
 					self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
@@ -708,10 +709,13 @@ class CHydroMainController():
 					message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
 					self.line_notify(message)
 			else:
-				message = f"水位{level}％、次回補充"
+				message = f"水位{level}％、次回補充（前回値{self.prev_level}％）"
+		elif level < (self.schedule['refill_limit'] * 1.5):
+			message = f"水位{level}％、次回補充"
 		else:
 			message = f"水位{level}％、問題なし"
 
+		self.prev_level = level;
 		return self.make_result(available, message)
 
 	def subpump_main(self, level_before):
@@ -739,6 +743,7 @@ class CHydroMainController():
 			'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
 		self.db_manage.insert_refill_record(data)
 		self.websocketd.broadcast(data)
+		self.prev_level = level_after;
 
 	def subpump_available(self, request=None):
 		available = self.raspi_ctl.subpump_available()
