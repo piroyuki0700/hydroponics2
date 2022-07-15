@@ -71,7 +71,7 @@ class CHydroRaspiController():
 
 	def measure_water_level(self):
 		self.logger.debug("called")
-		distance = 15
+		distance = 27
 
 		# %を計算（0～100に制限）
 		water_level = int((WATER_LEVEL_MAX - distance) * 100 / WATER_LEVEL_FULL)
