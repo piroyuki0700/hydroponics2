@@ -220,6 +220,12 @@ class CHydroMainController():
 		self.set_next_timer(next_minute)
 
 	def scheduler_callback(self):
+		try:
+			self.scheduler_main()
+		except Exception as e:
+			self.logger.error(f"Unknown exception: {e}")
+
+	def scheduler_main(self):
 		self.logger.debug("called ------------------------------")
 		now = datetime.now()
 		next_minute = now.minute
@@ -733,7 +739,7 @@ class CHydroMainController():
 
 		level_after = self.raspi_ctl.measure_water_level()['water_level']
 		level_plus = level_after - level_before
-		message += f"水位{level_before}％→{level_after}％（+{level_plus}％）"
+		message += f"水位{level_before}％→{level_after}％（{level_plus:+}％）"
 		self.logger.debug(message)
 
 		self.line_notify(message)
@@ -875,7 +881,7 @@ class CHydroWebsocketd:
 		except asyncio.CancelledError:
 			self.logger.warning("cancelled error.")
 		except websockets.exceptions.ConnectionClosedError:
-			self.logger.warning("connection closed error.")
+			self.logger.info("connection closed error.")
 		finally:
 			self.clients.remove(client)
 			count = len(self.clients)
