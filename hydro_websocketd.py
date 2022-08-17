@@ -705,21 +705,24 @@ class CHydroMainController():
 
 		if None == distance or 0 == distance:
 			message = f"水位測定失敗 distance={distance}"
-		elif level < self.schedule['refill_limit']:
-			if self.prev_level < (self.schedule['refill_limit'] * 1.5):
-				available = self.raspi_ctl.subpump_available()
-				if available:
-					self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
-					message = f"水位{level}％ サブポンプ動作開始"
-				else:
-					message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
-					self.line_notify(message)
-			else:
-				message = f"水位{level}％、次回補充（前回値{self.prev_level}％）"
-		elif level < (self.schedule['refill_limit'] * 1.5):
-			message = f"水位{level}％、次回補充"
 		else:
-			message = f"水位{level}％、問題なし"
+			limit = self.db_manage.get_sensor_limit()
+
+			if level < limit['water_level_vlow']:
+				if self.prev_level < limit['water_level_low']:
+					available = self.raspi_ctl.subpump_available()
+					if available:
+						self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
+						message = f"水位{level}％ サブポンプ動作開始"
+					else:
+						message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
+						self.line_notify(message)
+				else:
+					message = f"水位{level}％、次回補充（前回値{self.prev_level}％）"
+			elif level < limit['water_level_low']:
+				message = f"水位{level}％、次回補充"
+			else:
+				message = f"水位{level}％、問題なし"
 
 		self.prev_level = level;
 		return self.make_result(available, message)
