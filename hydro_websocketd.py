@@ -220,6 +220,12 @@ class CHydroMainController():
 		self.set_next_timer(next_minute)
 
 	def scheduler_callback(self):
+		try:
+			self.scheduler_main()
+		except Exception as e:
+			self.logger.error(f"Unknown exception: {e}")
+
+	def scheduler_main(self):
 		self.logger.debug("called ------------------------------")
 		now = datetime.now()
 		next_minute = now.minute
@@ -699,21 +705,24 @@ class CHydroMainController():
 
 		if None == distance or 0 == distance:
 			message = f"水位測定失敗 distance={distance}"
-		elif level < self.schedule['refill_limit']:
-			if self.prev_level < (self.schedule['refill_limit'] * 1.5):
-				available = self.raspi_ctl.subpump_available()
-				if available:
-					self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
-					message = f"水位{level}％ サブポンプ動作開始"
-				else:
-					message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
-					self.line_notify(message)
-			else:
-				message = f"水位{level}％、次回補充（前回値{self.prev_level}％）"
-		elif level < (self.schedule['refill_limit'] * 1.5):
-			message = f"水位{level}％、次回補充"
 		else:
-			message = f"水位{level}％、問題なし"
+			limit = self.db_manage.get_sensor_limit()
+
+			if level < limit['water_level_vlow']:
+				if self.prev_level < limit['water_level_low']:
+					available = self.raspi_ctl.subpump_available()
+					if available:
+						self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
+						message = f"水位{level}％ サブポンプ動作開始"
+					else:
+						message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
+						self.line_notify(message)
+				else:
+					message = f"水位{level}％、次回補充（前回値{self.prev_level}％）"
+			elif level < limit['water_level_low']:
+				message = f"水位{level}％、次回補充"
+			else:
+				message = f"水位{level}％、問題なし"
 
 		self.prev_level = level;
 		return self.make_result(available, message)
@@ -733,7 +742,7 @@ class CHydroMainController():
 
 		level_after = self.raspi_ctl.measure_water_level()['water_level']
 		level_plus = level_after - level_before
-		message += f"水位{level_before}％→{level_after}％（+{level_plus}％）"
+		message += f"水位{level_before}％→{level_after}％（{level_plus:+}％）"
 		self.logger.debug(message)
 
 		self.line_notify(message)
@@ -875,7 +884,7 @@ class CHydroWebsocketd:
 		except asyncio.CancelledError:
 			self.logger.warning("cancelled error.")
 		except websockets.exceptions.ConnectionClosedError:
-			self.logger.warning("connection closed error.")
+			self.logger.info("connection closed error.")
 		finally:
 			self.clients.remove(client)
 			count = len(self.clients)

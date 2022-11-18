@@ -55,32 +55,32 @@
       <span class="picture_datetime rounded-lg">撮影：<span id="picture_timestamp">no data</span></span>
     </div>
     <div class="content_bottom">
-      <div class="content_full card-group text-white text-center">
-        <div class="card text-white bg-secondary rounded-0" id="sensor_air_temp">
+      <div class="content_full card-group text-white text-center bg-dark">
+        <div class="card text-white bg-secondary rounded-0 sensor_card_ios" id="sensor_air_temp">
           <div class="card-header p-0">気温</div>
           <div class="card-body px-0 py-2"><span id="air_temp">XX.X</span>℃</div>
         </div>
-        <div class="card text-white bg-secondary" id="sensor_humidity">
+        <div class="card text-white bg-secondary sensor_card_ios" id="sensor_humidity">
           <div class="card-header p-0">湿度</div>
           <div class="card-body px-0 py-2"><span id="humidity">XX.X</span>％</div>
         </div>
-        <div class="card text-white bg-secondary" id="sensor_water_temp">
+        <div class="card text-white bg-secondary sensor_card_ios" id="sensor_water_temp">
           <div class="card-header p-0">水温</div>
           <div class="card-body px-0 py-2"><span id="water_temp">XX.X</span>℃</div>
         </div>
-        <div class="card text-white bg-secondary" id="sensor_water_level">
+        <div class="card text-white bg-secondary sensor_card_ios" id="sensor_water_level">
           <div class="card-header p-0">水位</div>
           <div class="card-body px-0 py-2"><span id="water_level">XX.X</span>％</div>
         </div>
-        <div class="card text-white bg-secondary" id="sensor_tds_level">
+        <div class="card text-white bg-secondary sensor_card_ios" id="sensor_tds_level">
           <div class="card-header p-0">濃度</div>
           <div class="card-body px-0 py-2">EC <span id="tds_level">XX.X</span></div>
         </div>
-        <div class="card text-white bg-secondary" id="sensor_brightness">
+        <div class="card text-white bg-secondary sensor_card_ios" id="sensor_brightness">
           <div class="card-header p-0">明るさ</div>
           <div class="card-body px-0 py-2"><span id="brightness">XX.X</span></div>
         </div>
-        <div class="card bg-dark rounded-0">
+        <div class="card bg-dark rounded-0 sensor_card_ios">
           <div class="card-header p-0">更新</div>
           <div class="card-body px-0 py-1">
             <button class="btn btn-outline-secondary" onclick="reloadButtonClick()"><i class="fa fa-repeat fa-2x"></i></button>
@@ -173,7 +173,7 @@
               <td colspan="4">
                 <span class="mr-4">水の補充</span>
                 <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="refill_active" value="1">
-                水位 <input class="input_number" name="refill_limit" type="text" value=""> ％未満で
+                水位「とても低い」で
                 <input class="input_number" name="refill_min" type="text" value=""> ～
                 <input class="input_number" name="refill_max" type="text" value=""> 秒間
               </td>

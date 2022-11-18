@@ -202,3 +202,9 @@ td.vmiddle {
   padding-top: 0.4em;
   padding-bottom: 0.4em;
 }
+
+div.sensor_card_ios {
+  width: 14.28%;
+  height: 100%;
+  float:left;
+}

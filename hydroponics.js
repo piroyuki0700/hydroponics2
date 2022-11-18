@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2022.07.12');
+  $('#version').text('Ver.2022.08.17');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -308,7 +308,6 @@ function setValueSchedule(data)
 
   $('input[name="schedule_active"]').bootstrapToggle(data['schedule_active']?'on':'off');
   $('input[name="refill_active"]').bootstrapToggle(data['refill_active']?'on':'off');
-  $('input[name="refill_limit"]').val(data['refill_limit']);
   $('input[name="refill_min"]').val(data['refill_min']);
   $('input[name="refill_max"]').val(data['refill_max']);
   $('input[name="time_morning"]').val(data['time_morning']);
