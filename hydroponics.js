@@ -109,6 +109,7 @@ function websocket_open(event)
 {
   printDebugMessage("websocket opened.");
   $('#reconnectButton').hide();
+  $('#confirmModal').modal('hide');
 }
 function websocket_close(event)
 {
