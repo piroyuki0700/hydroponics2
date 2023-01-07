@@ -21,6 +21,7 @@
   </head>
   <body>
 
+<!-- メイン画面 -->
 <div class="content_frame" id="main">
   <!-- 左パネル -->
   <div class="content_left text-center">
@@ -91,6 +92,7 @@
   </div>
 </div>
 
+<!-- 設定画面 -->
 <div class="content_frame" id="setting" >
   <!-- 左パネル -->
   <div class="content_left">
@@ -99,36 +101,35 @@
     </div>
     <ul class="nav nav-tabs nav-pills flex-sm-column small">
       <li class="nav-item">
-        <a href="#setting_pane0" class="nav-link active" data-bs-toggle="tab" data-toggle="tab">基本情報</a>
+        <a href="#pane_basic_info" class="nav-link active" data-bs-toggle="tab" data-toggle="tab">基本情報</a>
       </li>
       <li class="nav-item">
-        <a href="#setting_pane1" class="nav-link" data-bs-toggle="tab" data-toggle="tab">定時処理</a>
+        <a href="#pane_schedule" class="nav-link" data-bs-toggle="tab" data-toggle="tab">定時処理</a>
       </li>
       <li class="nav-item">
-        <a href="#setting_pane2" class="nav-link" data-bs-toggle="tab" data-toggle="tab">ポンプ</a>
+        <a href="#pane_pump" class="nav-link" data-bs-toggle="tab" data-toggle="tab">ポンプ</a>
       </li>
       <li class="nav-item">
-        <a href="#setting_pane3" class="nav-link" data-bs-toggle="tab" data-toggle="tab">カメラ</a>
+        <a href="#pane_camera" class="nav-link" data-bs-toggle="tab" data-toggle="tab">カメラ</a>
       </li>
       <li class="nav-item">
-        <a href="#setting_pane4" class="nav-link" data-bs-toggle="tab" data-toggle="tab">センサー閾値</a>
+        <a href="#pane_sensor" class="nav-link" data-bs-toggle="tab" data-toggle="tab">センサー閾値</a>
       </li>
       <li class="nav-item">
-        <a href="#setting_pane5" class="nav-link" data-bs-toggle="tab" data-toggle="tab">バージョン</a>
+        <a href="#pane_version" class="nav-link" data-bs-toggle="tab" data-toggle="tab">バージョン</a>
       </li>
       <li class="nav-item">
-        <a href="#setting_pane6" class="nav-link" data-bs-toggle="tab" data-toggle="tab">デバッグ用</a>
+        <a href="#pane_debug" class="nav-link" data-bs-toggle="tab" data-toggle="tab">デバッグ用</a>
       </li>
     </ul>
   </div>
 
   <!-- 右パネル -->
   <div class="content_right tab-content">
-    <div id="setting_pane0" class="tab-pane active content_full">
-    <div class="content_top bg-dark">
-      </div>
+    <div id="pane_basic_info" class="tab-pane active content_full">
+      <div class="content_top bg-dark"></div>
       <div class="content_main">
-        <i class="fa fa-leaf text-secondary m-2"><span class=""> 基本情報</span></i>
+        <i class="fa fa-leaf text-secondary m-2"> 基本情報</i>
         <table class="table table-striped text-center">
           <thead>
             <tr class="bg-secondary text-white">
@@ -151,33 +152,22 @@
       </div>
     </div>
 
-    <div id="setting_pane1" class="tab-pane content_full">
-    <div class="content_top bg-dark">
-      </div>
+    <div id="pane_schedule" class="tab-pane content_full">
+      <div class="content_top bg-dark"></div>
       <div class="content_main">
-        <i class="fa fa-edit text-secondary m-2"><span class=""> 定時処理の設定</span></i>
+        <i class="fa fa-edit text-secondary m-2"> 定時処理の設定</i>
         <table class="table table-striped text-center">
           <thead>
             <tr class="bg-secondary text-white">
               <th>項目</th>
-              <th colspan="4">設定値</th>
+              <th colspan="3">設定値</th>
+              <td class="system_switch">全体動作
+                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="success" data-offstyle="secondary" name="schedule_active" value="1">
+              </td>
             </tr>
           </thead>
           <tbody>
            <form id="schedule_form">
-            <tr>
-              <td class="system_switch">
-                全体動作
-                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="schedule_active" value="1">
-              </td>
-              <td colspan="4">
-                <span class="mr-4">水の補充</span>
-                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="refill_active" value="1">
-                水位「とても低い」で
-                <input class="input_number" name="refill_min" type="text" value=""> ～
-                <input class="input_number" name="refill_max" type="text" value=""> 秒間
-              </td>
-            </tr>
             <tr>
               <td class="vmiddle">時間区分</td>
               <td class="px-0"><input class="input_number" name="time_morning" type="text" value=""> 時（朝）</td>
@@ -200,7 +190,8 @@
                 <input class="input_number" name="evening_off" type="text" value=""> 
               </td>
               <td class="vmiddle lightgray">
-                夜間動作停止
+                夜間SW
+                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="nightly_active" value="1">
               </td>
             </tr>
             <tr>
@@ -213,6 +204,20 @@
               </td>
             </tr>
             <tr>
+              <td class="vmiddle">水の補充</td>
+              <td colspan="4">
+<!--
+                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="refill_active" value="1">
+-->
+                <label><input type="radio" name="refill_trigger" value="none">なし</label>
+                <label class="ml-2"><input type="radio" name="refill_trigger" value="float_switch" checked>フロートSW</label>
+                <label class="ml-2"><input type="radio" name="refill_trigger" value="ultra_sonic">水位「とても低い」</label>で
+                <input class="input_number" name="refill_min" type="text" value="">
+                〜
+                <input class="input_number" name="refill_max" type="text" value="">秒間
+              </td>
+            </tr>
+            <tr>
               <td class="vmiddle">カメラ撮影</td>
               <td colspan="4">
                 <input class="input_number" name="camera1" id="camera1" type="text" value=""> 時、
@@ -220,6 +225,7 @@
                 <input class="input_number" name="camera3" type="text" value=""> 時、
                 <input class="input_number" name="camera4" type="text" value=""> 時、
                 <input class="input_number" name="camera5" type="text" value=""> 時
+              </td>
             </tr>
             <tr>
               <td class="vmiddle">通知</td>
@@ -247,9 +253,8 @@
       </div>
     </div>
 
-    <div id="setting_pane2" class="tab-pane content_full">
-    <div class="content_top bg-dark">
-      </div>
+    <div id="pane_pump" class="tab-pane content_full">
+      <div class="content_top bg-dark"></div>
       <div class="content_main">
         <div class="content_control">
           <i class="fa fa-refresh text-secondary m-2"> 循環</i>
@@ -285,7 +290,7 @@
       </div>
     </div>
 
-    <div id="setting_pane3" class="tab-pane content_full">
+    <div id="pane_camera" class="tab-pane content_full">
       <div class="content_picture" id="tmp_picture_frame">
         <span class="picture_datetime">撮影：<span id="tmp_picture_timestamp">no data</span></span>
       </div>
@@ -310,9 +315,8 @@
       </div>
     </div>
 
-    <div id="setting_pane4" class="tab-pane content_full">
-    <div class="content_top bg-dark">
-      </div>
+    <div id="pane_sensor" class="tab-pane content_full">
+      <div class="content_top bg-dark"></div>
       <div class="content_main">
         <i class="fa fa-wrench text-secondary m-2"> センサー閾値の設定</i>
         <table class="table text-center">
@@ -338,8 +342,8 @@
               <td class="bg-danger" ><input class="input_number" type="text" value="" name="humidity_vlow"></td>
               <td class="bg-warning"><input class="input_number" type="text" value="" name="humidity_low"></td>
               <td>湿度（％）</td>
-              <td class="bg-secondary">－</td>
-              <td class="bg-secondary">－</td>
+              <td class="bg-secondary">ー</td>
+              <td class="bg-secondary">ー</td>
             </tr>
             <tr>
               <td class="bg-danger" ><input class="input_number" type="text" value="" name="water_temp_vlow"></td>
@@ -352,8 +356,8 @@
               <td class="bg-danger" ><input class="input_number" type="text" value="" name="water_level_vlow"></td>
               <td class="bg-warning"><input class="input_number" type="text" value="" name="water_level_low"></td>
               <td>水位（％）</td>
-              <td class="bg-secondary">－</td>
-              <td class="bg-secondary">－</td>
+              <td class="bg-secondary">ー</td>
+              <td class="bg-secondary">ー</td>
             </tr>
             <tr>
               <td class="bg-danger" ><input class="input_number" type="text" value="" name="tds_level_vlow"></td>
@@ -376,9 +380,8 @@
       </div>
     </div>
 
-    <div id="setting_pane5" class="tab-pane content_full">
-    <div class="content_top bg-dark">
-      </div>
+    <div id="pane_version" class="tab-pane content_full">
+      <div class="content_top bg-dark"></div>
       <div class="content_main">
         <i class="fa fa-question-circle text-secondary m-2"> バージョン情報</i>
         <div class="content_logo logo_high mt-4">
@@ -390,42 +393,41 @@
       </div>
     </div>
 
-    <div id="setting_pane6" class="tab-pane content_full">
-    <div class="content_top bg-dark">
-      </div>
+    <div id="pane_debug" class="tab-pane content_full">
+      <div class="content_top bg-dark"></div>
       <div class="content_main">
         <i class="fa fa-bug text-secondary m-2"> デバッグ用</i>
         <div class="mt-1">
-         <span>
-          <span class="small">websocket</span>
-          <button onclick="reconnectButtonClick()" class="btn btn-secondary command_button">接続</button>
-          <button onclick="disconnectButtonClick()" class="btn btn-secondary command_button">切断</button>
-         </span>
-         <span>
-          <button onclick="ledButtonClick('blue',  'on')" class="btn btn-primary command_button ml-3">ON</button>
-          <button onclick="ledButtonClick('blue', 'off')" class="btn btn-primary command_button">OFF</button>
-          <button onclick="ledButtonClick('green', 'on')" class="btn btn-success command_button ml-3">ON</button>
-          <button onclick="ledButtonClick('green', 'off')" class="btn btn-success command_button">OFF</button>
-          <button onclick="ledButtonClick('yellow',  'on')" class="btn btn-warning command_button ml-3">ON</button>
-          <button onclick="ledButtonClick('yellow', 'off')" class="btn btn-warning command_button">OFF</button>
-          <button onclick="ledButtonClick('red',  'on')" class="btn btn-danger command_button ml-3">ON</button>
-          <button onclick="ledButtonClick('red', 'off')" class="btn btn-danger command_button">OFF</button>
-         </span>
+          <span>
+            <span class="small">websocket</span>
+            <button onclick="reconnectButtonClick()" class="btn btn-secondary command_button">接続</button>
+            <button onclick="disconnectButtonClick()" class="btn btn-secondary command_button">切断</button>
+          </span>
+          <span>
+            <button onclick="ledButtonClick('blue',  'on')" class="btn btn-primary command_button ml-3">ON</button>
+            <button onclick="ledButtonClick('blue', 'off')" class="btn btn-primary command_button">OFF</button>
+            <button onclick="ledButtonClick('green', 'on')" class="btn btn-success command_button ml-3">ON</button>
+            <button onclick="ledButtonClick('green', 'off')" class="btn btn-success command_button">OFF</button>
+            <button onclick="ledButtonClick('yellow',  'on')" class="btn btn-warning command_button ml-3">ON</button>
+            <button onclick="ledButtonClick('yellow', 'off')" class="btn btn-warning command_button">OFF</button>
+            <button onclick="ledButtonClick('red',  'on')" class="btn btn-danger command_button ml-3">ON</button>
+            <button onclick="ledButtonClick('red', 'off')" class="btn btn-danger command_button">OFF</button>
+          </span>
         </div>
         <div class="mt-1">
-         <span>
-          <button onclick="debugButtonMeasure('temp_humid')" class="btn btn-secondary command_button">温湿度</button>
-          <button onclick="debugButtonMeasure('water_temp')" class="btn btn-secondary command_button">水温</button>
-          <button onclick="debugButtonMeasure('water_level')" class="btn btn-secondary command_button">水位</button>
-          <button onclick="debugButtonMeasure('tds_level')" class="btn btn-secondary command_button">濃度</button>
-          <button onclick="debugButtonMeasure('brightness')" class="btn btn-secondary command_button">明るさ</button>
-         </span>
-         <span class="ml-5">
-          <span class="small">テスト：</span>
-          <button onclick="debugButtonReport()" class="btn btn-secondary command_button">定時処理</button>
-          <button onclick="debugButtonTweet()" class="btn btn-secondary command_button">Tweet</button>
-          <button onclick="debugButtonLine()" class="btn btn-secondary command_button">Line</button>
-         </span>
+          <span>
+            <button onclick="debugButtonMeasure('temp_humid')" class="btn btn-secondary command_button">温湿度</button>
+            <button onclick="debugButtonMeasure('water_temp')" class="btn btn-secondary command_button">水温</button>
+            <button onclick="debugButtonMeasure('water_level')" class="btn btn-secondary command_button">水位</button>
+            <button onclick="debugButtonMeasure('tds_level')" class="btn btn-secondary command_button">濃度</button>
+            <button onclick="debugButtonMeasure('brightness')" class="btn btn-secondary command_button">明るさ</button>
+          </span>
+          <span class="ml-5">
+            <span class="small">テスト：</span>
+            <button onclick="debugButtonReport()" class="btn btn-secondary command_button">定時処理</button>
+            <button onclick="debugButtonTweet()" class="btn btn-secondary command_button">Tweet</button>
+            <button onclick="debugButtonLine()" class="btn btn-secondary command_button">Line</button>
+          </span>
         </div>
         <div class="mt-1">
           <span class="small">サブポンプ：</span>
@@ -479,6 +481,9 @@
 
     <!-- font awesome --->
     <script src="https://kit.fontawesome.com/e84a7fa652.js" crossorigin="anonymous"></script>
+<!--
+    <script src="https://kit.fontawesome.com/fe997dd32f.js" crossorigin="anonymous"></script>
+-->
     <script src="hydroponics.js"></script>
 
     <!-- Bootstrap Switch Button --->
