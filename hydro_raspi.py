@@ -5,7 +5,7 @@
 
 import RPi.GPIO as GPIO
 import adafruit_dht
-#from board import *
+from board import *
 import smbus
 import time
 import re
@@ -26,7 +26,7 @@ A3 = 0x43
 # GPIO.BCM番号
 gpio_led = {'blue': 19, 'green': 26, 'yellow': 21, 'red': 20}
 
-gpio_dht11 = 13
+gpio_dht11 = D13
 gpio_ds18 = 7
 gpio_pump = 6
 gpio_air = 5
