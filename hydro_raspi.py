@@ -5,7 +5,7 @@
 
 import RPi.GPIO as GPIO
 import adafruit_dht
-from board import *
+#from board import *
 import smbus
 import time
 import re
@@ -24,15 +24,21 @@ A2 = 0x42
 A3 = 0x43
 
 # GPIO.BCM番号
-gpio_led = {'blue': 19, 'green': 16, 'yellow': 26, 'red': 20}
+gpio_led = {'blue': 19, 'green': 26, 'yellow': 21, 'red': 20}
 
-gpio_dht11 = D18	# 12番のBCM GPIO番号
-gpio_ds18 = 4
-gpio_pump = 17
-gpio_air = 22
+gpio_dht11 = 13
+gpio_ds18 = 7
+gpio_pump = 6
+gpio_air = 5
+gpio_subpump = 10
+gpio_nightly = 4
 
-gpio_trig = 23
-gpio_echo = 24
+gpio_float_upper = 24
+gpio_float_lower = 23
+gpio_float_sub = 18
+
+gpio_trig = 12
+gpio_echo = 16
 MAX_DISTANCE = 220
 VALID_DISTANCE_MIN = 3
 VALID_DISTANCE_MAX = 30
@@ -48,9 +54,6 @@ RETRY_DISTANCE_MAX = 10
 RETRY_DISTANCE_DELAY = 0.5
 RETRY_TDS_MAX = 10
 RETRY_TDS_DELAY = 0.5
-
-gpio_subp_relay = 5
-gpio_subp_level = 6
 
 class CHydroRaspiController():
 	logger = None
@@ -256,15 +259,15 @@ class CHydroRaspiController():
 	# サブポンプ直接操作
 	def subpump_switch(self, enable):
 		self.logger.debug(f"called. enable={enable}")
-		GPIO.setup(gpio_subp_relay, GPIO.OUT)
-		GPIO.output(gpio_subp_relay, GPIO.HIGH if enable is True else GPIO.LOW)
+		GPIO.setup(gpio_subpump, GPIO.OUT)
+		GPIO.output(gpio_subpump, GPIO.HIGH if enable is True else GPIO.LOW)
 		return True
 
 	# サブタンクの水の状態確認
 	def subpump_available(self):
 		self.logger.debug("called")
-		GPIO.setup(gpio_subp_level, GPIO.IN)
-		level = GPIO.input(gpio_subp_level)
+		GPIO.setup(gpio_float_sub, GPIO.IN)
+		level = GPIO.input(gpio_float_sub)
 		return level == GPIO.HIGH
 
 	# サブタンクの水終了コールバック
@@ -275,7 +278,7 @@ class CHydroRaspiController():
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
 		self.logger.debug("called")
-		GPIO.add_event_detect(gpio_subp_level, GPIO.FALLING, self.subpump_empty, 1000)
+		GPIO.add_event_detect(gpio_float_sub, GPIO.FALLING, self.subpump_empty, 1000)
 
 		start_time = datetime.now()
 		self.logger.debug("start_time: " + start_time.strftime('%Y/%m/%d %H:%M:%S'))
