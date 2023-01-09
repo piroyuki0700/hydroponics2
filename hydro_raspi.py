@@ -27,7 +27,7 @@ A3 = 0x43
 gpio_led = {'blue': 19, 'green': 26, 'yellow': 21, 'red': 20}
 
 gpio_dht11 = D13
-gpio_ds18 = 7
+gpio_ds18 = 7 # 1wire device. need to write the gpio setting in /boot/config.txt to use non-default gpio number
 gpio_pump = 6
 gpio_air = 5
 gpio_subpump = 10
@@ -64,6 +64,7 @@ class CHydroRaspiController():
 		self.logger.debug("called")
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
+		GPIO.setup(gpio_ds18, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 		self.event_subpump = threading.Event()
 
 	def __del__(self):
@@ -101,7 +102,6 @@ class CHydroRaspiController():
 
 	def measure_water_temp(self):
 		self.logger.debug("called")
-		GPIO.setup(gpio_ds18, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 		result = {'water_temp': None}
 		for i in range(RETRY_WATERTEMP_MAX):
