@@ -65,6 +65,9 @@ class CHydroRaspiController():
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
 		GPIO.setup(gpio_ds18, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+		GPIO.setup(gpio_float_upper, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		GPIO.setup(gpio_float_lower, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		GPIO.setup(gpio_float_sub, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 		self.event_subpump = threading.Event()
 
 	def __del__(self):
@@ -268,7 +271,7 @@ class CHydroRaspiController():
 		self.logger.debug("called")
 		GPIO.setup(gpio_float_sub, GPIO.IN)
 		level = GPIO.input(gpio_float_sub)
-		return level == GPIO.HIGH
+		return level == GPIO.LOW
 
 	# サブタンクの水終了コールバック
 	def subpump_empty(self):
@@ -278,7 +281,7 @@ class CHydroRaspiController():
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
 		self.logger.debug("called")
-		GPIO.add_event_detect(gpio_float_sub, GPIO.FALLING, self.subpump_empty, 1000)
+		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_empty, 1000)
 
 		start_time = datetime.now()
 		self.logger.debug("start_time: " + start_time.strftime('%Y/%m/%d %H:%M:%S'))
