@@ -11,8 +11,8 @@ import threading
 import logging
 import json
 
-DATABASE_ID = 'hydro2022summer'
-#DATABASE_ID = 'hydroponics1_test'
+#DATABASE_ID = 'hydro2023summer'
+DATABASE_ID = 'hydro2023test'
 
 class CHydroDatabaseManager():
 	logger = None
@@ -233,13 +233,17 @@ class CHydroDatabaseManager():
 	def get_pump_status(self):
 		self.logger.debug("called")
 		row = self.getone('pump_status')
-		end = datetime.strptime(row['end_time'], '%Y/%m/%d %H:%M:%S')
-		tdiff = end - datetime.now()
-		seconds = tdiff.total_seconds()
-		if seconds < 0:
-			# 過去の時刻が入っていた場合
+		if len(row) == 0:
 			seconds = 0
-			row['status'] = 'error_stop'
+			row['status'] = 'manual_stop'
+		else:
+			end = datetime.strptime(row['end_time'], '%Y/%m/%d %H:%M:%S')
+			tdiff = end - datetime.now()
+			seconds = tdiff.total_seconds()
+			if seconds < 0:
+				# 過去の時刻が入っていた場合
+				seconds = 0
+				row['status'] = 'error_stop'
 		data = {'pump_status': row['status'], 'seconds': seconds}
 #		self.logger.debug(f"{data}")
 		return data
