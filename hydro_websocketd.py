@@ -298,10 +298,10 @@ class CHydroMainController():
 
 		self.subpump_stop()
 		self.scheduler_stop()
-		self.switcher.stop()
 
 	def scheduler_stop(self):
 		self.logger.info("called")
+		self.switcher.stop()
 		if self.schedule_timer != None:
 			self.schedule_timer.cancel()
 			del self.schedule_timer
