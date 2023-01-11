@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2022.12.12');
+  $('#version').text('Ver.2023.1.11');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -308,9 +308,6 @@ function setValueSchedule(data)
   }
 
   $('input[name="schedule_active"]').bootstrapToggle(data['schedule_active']?'on':'off');
-  $('input[name="refill_active"]').bootstrapToggle(data['refill_active']?'on':'off');
-  $('input[name="refill_min"]').val(data['refill_min']);
-  $('input[name="refill_max"]').val(data['refill_max']);
   $('input[name="time_morning"]').val(data['time_morning']);
   $('input[name="time_noon"]').val(data['time_noon']);
   $('input[name="time_evening"]').val(data['time_evening']);
@@ -321,10 +318,14 @@ function setValueSchedule(data)
   $('input[name="noon_off"]').val(data['noon_off']);
   $('input[name="evening_on"]').val(data['evening_on']);
   $('input[name="evening_off"]').val(data['evening_off']);
+  $('input[name="nightly_active"]').bootstrapToggle(data['nightly_active']?'on':'off');
   $('input[name="time_spot1"]').val(data['time_spot1']);
   $('input[name="time_spot2"]').val(data['time_spot2']);
   $('input[name="time_spot3"]').val(data['time_spot3']);
   $('input[name="spot_on"]').val(data['spot_on']);
+  $('input[name="refill_trigger"]').val([data['refill_trigger']]);
+  $('input[name="refill_min"]').val(data['refill_min']);
+  $('input[name="refill_max"]').val(data['refill_max']);
   $('input[name="camera1"]').val(data['camera1']);
   $('input[name="camera2"]').val(data['camera2']);
   $('input[name="camera3"]').val(data['camera3']);
@@ -499,10 +500,14 @@ function scheduleCommitClick() {
   data = Object.fromEntries(formData);
 
   // トグルスイッチの値の追加
-  data["schedule_active"]  = $('input[name="schedule_active"]').prop("checked")?"1":"0";
-  data["refill_active"]  = $('input[name="refill_active"]').prop("checked")?"1":"0";
-  data["notify_active"]    = $('input[name="notify_active"]').prop("checked")?"1":"0";
+  data["schedule_active"] = $('input[name="schedule_active"]').prop("checked")?"1":"0";
+  data["nightly_active"] = $('input[name="nightly_active"]').prop("checked")?"1":"0";
+  data["notify_active"] = $('input[name="notify_active"]').prop("checked")?"1":"0";
   data["emergency_active"] = $('input[name="emergency_active"]').prop("checked")?"1":"0";
+
+  // ラジオボタンの値の取得
+  data["refill_trigger"] = $('input[name="refill_trigger"]:checked').val();
+  printDebugMessage("trigger=" + $('input[name="refill_trigger"]:checked').val());
 
   // 時刻指定なしにしたいとき（マイナス値は無効）
   const items = ["time_spot1", "time_spot2", "time_spot3", 
