@@ -299,3 +299,9 @@ class CHydroRaspiController():
 
 		return {'past': past, 'empty': ret}
 
+	# 夜間スイッチ
+	def nightly_switch(self, enable):
+		self.logger.debug(f"called. enable={enable}")
+		GPIO.setup(gpio_nightly, GPIO.OUT)
+		GPIO.output(gpio_nightly, GPIO.HIGH if enable is True else GPIO.LOW)
+		return True

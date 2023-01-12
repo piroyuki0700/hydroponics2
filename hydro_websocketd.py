@@ -212,10 +212,13 @@ class CHydroMainController():
 			else:
 				self.logger.info("next start")
 				next_minute = MINUTE_START
+			self.raspi_ctl.nightly_switch(False)
 		else:
 			self.switcher.stop()
 			next_minute = MINUTE_START
 			self.raspi_ctl.update_led('blue')
+			if self.schedule['nightly_active'] == 1:
+				self.raspi_ctl.nightly_switch(True)
 
 		self.set_next_timer(next_minute)
 
@@ -302,6 +305,7 @@ class CHydroMainController():
 	def scheduler_stop(self):
 		self.logger.info("called")
 		self.switcher.stop()
+		self.raspi_ctl.nightly_switch(False)
 		if self.schedule_timer != None:
 			self.schedule_timer.cancel()
 			del self.schedule_timer

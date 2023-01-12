@@ -158,4 +158,6 @@ class CHydroRaspiController():
 		time.sleep(10)
 		return {'past': 10, 'empty': True}
 
-
+	# 夜間スイッチ
+	def nightly_switch(self, enable):
+		self.logger.debug(f"called. enable={enable}")
