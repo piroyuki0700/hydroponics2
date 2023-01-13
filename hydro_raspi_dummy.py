@@ -64,10 +64,12 @@ class CHydroRaspiController():
 	def measure_temp_humid(self):
 		self.logger.debug("called")
 		return {'air_temp': 25.5, 'humidity': 45.6}
+#		return {'air_temp': None, 'humidity': None}
 
 	def measure_water_temp(self):
 		self.logger.debug("called")
 		return {'water_temp': 23.4}
+#		return {'water_temp': None}
 
 	def measure_water_level(self):
 		self.logger.debug("called")
@@ -85,6 +87,9 @@ class CHydroRaspiController():
 		KVALUE = 1.0274
 
 		value = 50
+
+		if temperature == None:
+			temperature = 25.0
 
 		voltage = value * AREF / ADCRANGE
 		ecValue = (133.42*voltage**3 - 255.86*voltage**2 + 857.39*voltage) * KVALUE

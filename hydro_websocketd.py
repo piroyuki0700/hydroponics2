@@ -21,8 +21,8 @@ import shutil
 import logging
 import logging.handlers
 
-from hydro_raspi import CHydroRaspiController
-#from hydro_raspi_dummy import CHydroRaspiController
+#from hydro_raspi import CHydroRaspiController
+from hydro_raspi_dummy import CHydroRaspiController
 from hydro_db_manage import CHydroDatabaseManager
 
 MINUTE_START = 0
@@ -152,6 +152,7 @@ class CHydroMainController():
 			'subpump_refill'   : self.subpump_refill,
 			'subpump_start'    : self.subpump_start,
 			'subpump_stop'     : self.subpump_stop,
+			'make_report'      : self.make_report,
 			'test_tweet'       : self.test_tweet,
 			'test_line'        : self.test_line,
 			'debug_time_span'  : self.debug_time_span,
@@ -222,6 +223,11 @@ class CHydroMainController():
 
 		self.set_next_timer(next_minute)
 
+	def make_report(self, request=None):
+		now = datetime.now()
+		(activate, ontime, offtime) = self.check_time_span(now)
+		self.execute_schedule(now, ontime, offtime)
+
 	def scheduler_callback(self):
 		try:
 			self.scheduler_main()
@@ -242,7 +248,7 @@ class CHydroMainController():
 				self.trigger_stop()
 				next_minute = MINUTE_REFILL
 			elif now.minute == MINUTE_REFILL:
-				self.trigger_refill()
+				self.subpump_refill()
 				next_minute = MINUTE_START
 			else:
 				self.logger.error(f"timer might expire at the wrong time.")
@@ -473,30 +479,34 @@ class CHydroMainController():
 
 		# line if any status is in danger.
 		if self.schedule['emergency_active'] == True and report['total_status'] == 'danger':
-			picture_path = ""
+			picture_path = None
 			# take a picture now if not.
 			if camera == True:
-				picture_path = result_camera['picture_path']
+				if result_camera['picture_result'] == True:
+					picture_path = result_camera['picture_path']
 			else:
 				self.future_camera = self.executor_camera.submit(self.camera_main)
 				result_camera = self.future_camera.result()
-				picture_path = result_camera['tmp_picture_path']
+				if result_camera['tmp_picture_result'] == True:
+					picture_path = result_camera['tmp_picture_path']
 
 			# send notification to the line account.
 			self.line_notify(f"## 危険 ##\n{message}", picture_path)
 
 		self.websocketd.broadcast(report)
 		if 'water_level' in report:
-			self.prev_level = report['water_level'];
+			self.prev_level = report['water_level']
 
 	def trigger_stop(self):
 		self.logger.debug("called")
 		self.switcher.stop()
 
-	def trigger_refill(self):
+	def subpump_refill(self, request=None):
 		self.logger.debug("called")
-		if self.schedule['refill_active']:
-			self.subpump_refill()
+		if self.schedule['refill_trigger'] == 1:
+			self.subpump_trigger_level()
+		elif self.schedule['refill_trigger'] == 2:
+			self.subpump_trigger_switch()
 
 	def tmp_report(self, request):
 		loop = asyncio.get_running_loop()
@@ -697,8 +707,10 @@ class CHydroMainController():
 			ret = True
 		return self.make_result(ret, message)
 
-	def subpump_refill(self, request=None):
-		available = True
+	def subpump_trigger_switch(self):
+		None
+
+	def subpump_trigger_level(self):
 		data = self.raspi_ctl.measure_water_level()
 		level = data['water_level']
 		distance = data['distance']
@@ -713,10 +725,10 @@ class CHydroMainController():
 			limit = self.db_manage.get_sensor_limit()
 
 			if level < limit['water_level_vlow']:
-				if self.prev_level < limit['water_level_low']:
+				if self.prev_level != None and self.prev_level < limit['water_level_low']:
 					available = self.raspi_ctl.subpump_available()
 					if available:
-						self.future_subpump = self.executor_subpump.submit(self.subpump_main, level)
+						self.future_subpump = self.executor_subpump.submit(self.subpump_main_level, level)
 						message = f"水位{level}％ サブポンプ動作開始"
 					else:
 						message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
@@ -728,10 +740,10 @@ class CHydroMainController():
 			else:
 				message = f"水位{level}％、問題なし"
 
-		self.prev_level = level;
-		return self.make_result(available, message)
+		self.prev_level = level
+		self.logger.debug(message)
 
-	def subpump_main(self, level_before):
+	def subpump_main_level(self, level_before):
 		self.logger.debug("called")
 
 		seconds = self.schedule['refill_max'] - level_before
@@ -756,7 +768,7 @@ class CHydroMainController():
 			'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
 		self.db_manage.insert_refill_record(data)
 		self.websocketd.broadcast(data)
-		self.prev_level = level_after;
+		self.prev_level = level_after
 
 	def subpump_available(self, request=None):
 		available = self.raspi_ctl.subpump_available()

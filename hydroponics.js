@@ -744,7 +744,7 @@ function debugButtonMeasure(sensor_kind) {
 //
 // デバッグ：サブポンプ動作
 //
-function debugButtonSubPump(request) {
+function subPumpButtonClick(request) {
   websocket_send({'command': 'subpump_' + request});
 }
 
@@ -752,7 +752,7 @@ function debugButtonSubPump(request) {
 // デバッグ：定時動作テスト
 //
 function debugButtonReport() {
-  websocket_send({'command': 'make_report', 'save': true});
+  websocket_send({'command': 'make_report'});
 }
 
 //

@@ -203,12 +203,9 @@
             <tr>
               <td class="vmiddle">水の補充</td>
               <td colspan="4">
-<!--
-                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="refill_active" value="1">
--->
-                <label><input type="radio" name="refill_trigger" value="none">なし</label>
-                <label class="ml-2"><input type="radio" name="refill_trigger" value="float_switch" checked>フロートSW</label>
-                <label class="ml-2"><input type="radio" name="refill_trigger" value="ultra_sonic">水位「とても低い」</label>で
+                <label><input type="radio" name="refill_trigger" value="0">なし</label>
+                <label class="ml-2"><input type="radio" name="refill_trigger" value="1">フロートSW</label>
+                <label class="ml-2"><input type="radio" name="refill_trigger" value="2">水位「とても低い」</label>で
                 <input class="input_number" name="refill_min" type="text" value="">
                 〜
                 <input class="input_number" name="refill_max" type="text" value="">秒間
@@ -428,10 +425,10 @@
         </div>
         <div class="mt-1">
           <span class="small">サブポンプ：</span>
-          <button onclick="debugButtonSubPump('available')" class="btn btn-secondary command_button">状態</button>
-          <button onclick="debugButtonSubPump('refill')" class="btn btn-secondary command_button">補充</button>
-          <button onclick="debugButtonSubPump('start')" class="btn btn-secondary command_button">ON</button>
-          <button onclick="debugButtonSubPump('stop')" class="btn btn-secondary command_button">OFF</button>
+          <button onclick="subPumpButtonClick('available')" class="btn btn-secondary command_button">状態</button>
+          <button onclick="subPumpButtonClick('refill')" class="btn btn-secondary command_button">補充</button>
+          <button onclick="subPumpButtonClick('start')" class="btn btn-secondary command_button">ON</button>
+          <button onclick="subPumpButtonClick('stop')" class="btn btn-secondary command_button">OFF</button>
           <span class="small" id="refill_record"></span>
         </div>
         <textarea class="content_message border border-dark" id="debug_message"></textarea>
@@ -474,6 +471,7 @@
     <!-- font awesome --->
     <script src="https://kit.fontawesome.com/e84a7fa652.js" crossorigin="anonymous"></script>
 
+    <!-- PiroLab Hydroponics js -->
     <script src="hydroponics.js"></script>
 
     <!-- Bootstrap Switch Button --->
