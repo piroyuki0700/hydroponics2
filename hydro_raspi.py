@@ -244,6 +244,17 @@ class CHydroRaspiController():
 			self.logger.error(traceback.format_exc())
 			return {}
 
+	# タンクの水チェック
+	def water_full(self):
+		self.logger.debug("called")
+		float_sw = GPIO.input(gpio_float_upper)
+		return float_sw == GPIO.HIGH
+
+	def water_empty(self):
+		self.logger.debug("called")
+		float_sw = GPIO.input(gpio_float_sub)
+		return float_sw == GPIO.LOW
+
 	# LED ON/OFF
 	def set_led(self, color, state):
 		self.logger.debug(f"called. {color}={state}")
@@ -269,9 +280,8 @@ class CHydroRaspiController():
 	# サブタンクの水の状態確認
 	def subpump_available(self):
 		self.logger.debug("called")
-		GPIO.setup(gpio_float_sub, GPIO.IN)
-		level = GPIO.input(gpio_float_sub)
-		return level == GPIO.LOW
+		float_sw = GPIO.input(gpio_float_sub)
+		return float_sw == GPIO.LOW
 
 	# サブタンクの水終了コールバック
 	def subpump_empty(self):
