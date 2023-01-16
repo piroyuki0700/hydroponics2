@@ -135,11 +135,11 @@ class CHydroRaspiController():
 			return {}
 
 	# タンクの水チェック
-	def water_full(self):
+	def maintank_is_full(self):
 		self.logger.debug("called")
 		return True
 
-	def water_empty(self):
+	def maintank_is_empty(self):
 		self.logger.debug("called")
 		return False
 
@@ -164,8 +164,8 @@ class CHydroRaspiController():
 		return True
 
 	# サブタンクの水終了コールバック
-	def subpump_empty(self):
-		self.logger.warning("The sub tank is empty.")
+	def subpump_callback(self):
+		self.logger.debug("called")
 
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):

@@ -245,12 +245,12 @@ class CHydroRaspiController():
 			return {}
 
 	# タンクの水チェック
-	def water_full(self):
+	def maintank_is_full(self):
 		self.logger.debug("called")
 		float_sw = GPIO.input(gpio_float_upper)
 		return float_sw == GPIO.HIGH
 
-	def water_empty(self):
+	def maintank_is_empty(self):
 		self.logger.debug("called")
 		float_sw = GPIO.input(gpio_float_sub)
 		return float_sw == GPIO.LOW
@@ -284,14 +284,17 @@ class CHydroRaspiController():
 		return float_sw == GPIO.LOW
 
 	# サブタンクの水終了コールバック
-	def subpump_empty(self):
-		self.logger.warning("The sub tank is empty.")
+	def subpump_callback(self):
+		self.logger.warning("cancel subpump")
 		self.event_subpump.set()
 
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
 		self.logger.debug("called")
-		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_empty, 1000)
+		# サブタンクの水がなくなった場合
+		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 1000)
+		# メインタンクが満タンになった場合
+		GPIO.add_event_detect(gpio_float_upper, GPIO.RISING, self.subpump_callback, 1000)
 
 		start_time = datetime.now()
 		self.logger.debug("start_time: " + start_time.strftime('%Y/%m/%d %H:%M:%S'))
@@ -305,9 +308,12 @@ class CHydroRaspiController():
 		end_time = datetime.now()
 
 		past = int((end_time - start_time).total_seconds()) + 1
+		GPIO.remove_event_detect(gpio_float_sub)
+		GPIO.remove_event_detect(gpio_float_upper)
 		self.event_subpump.clear()
 
-		return {'past': past, 'empty': ret}
+		empty = not self.subpump_available()
+		return {'past': past, 'empty': empty}
 
 	# 夜間スイッチ
 	def nightly_switch(self, enable):

@@ -504,9 +504,9 @@ class CHydroMainController():
 	def subpump_refill(self, request=None):
 		self.logger.debug("called")
 		if self.schedule['refill_trigger'] == 1:
-			self.subpump_trigger_level()
-		elif self.schedule['refill_trigger'] == 2:
 			self.subpump_trigger_switch()
+		elif self.schedule['refill_trigger'] == 2:
+			self.subpump_trigger_level()
 
 	def tmp_report(self, request):
 		loop = asyncio.get_running_loop()
@@ -708,7 +708,41 @@ class CHydroMainController():
 		return self.make_result(ret, message)
 
 	def subpump_trigger_switch(self):
-		None
+		if self.raspi_ctl.maintank_is_empty():
+			available = self.raspi_ctl.subpump_available()
+			if available:
+				self.future_subpump = self.executor_subpump.submit(self.subpump_main_switch)
+				message = "水位低下 サブポンプ動作開始"
+			else:
+				message = "## 危険 ## 水位低下、サブタンクの水がありません。"
+				self.line_notify(message)
+		else:
+			message = "水位問題なし"
+
+		self.logger.debug(message)
+
+	def subpump_main_switch(self):
+		self.logger.debug("called")
+
+		seconds = self.schedule['refill_max']
+		result = self.raspi_ctl.subpump_refill(self.schedule['refill_min'], seconds)
+		message = f"{result['past']}秒間、水を追加しました。"
+		if result['empty'] == True:
+			message += "サブタンクの水がなくなりました\n"
+
+		empty = self.raspi_ctl.maintank_is_empty()
+		full = self.raspi_ctl.maintank_is_full()
+
+		message += f"水位低下→低下:{empty}, 満タン:{full}"
+		self.logger.debug(message)
+
+		self.line_notify(message)
+		self.websocketd.broadcast(self.make_result(True, message))
+
+		data = {'command': 'refill_record', 'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
+			'on_seconds':  result['past'], 'trigger': 'switch', 'empty': empty, 'full': full}
+		self.db_manage.insert_refill_record(data)
+		self.websocketd.broadcast(data)
 
 	def subpump_trigger_level(self):
 		data = self.raspi_ctl.measure_water_level()
@@ -764,8 +798,8 @@ class CHydroMainController():
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
 
-		data = {'command': 'refill_record', 'on_seconds':  result['past'], 'level_before': level_before, 'level_after': level_after,
-			'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
+		data = {'command': 'refill_record', 'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
+			'on_seconds':  result['past'], 'trigger': 'level', 'level_before': level_before, 'level_after': level_after}
 		self.db_manage.insert_refill_record(data)
 		self.websocketd.broadcast(data)
 		self.prev_level = level_after
