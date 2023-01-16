@@ -54,10 +54,13 @@ DROP TABLE IF EXISTS `refill_record`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `refill_record` (
   `no` int(11) NOT NULL AUTO_INCREMENT,
+  `refilled_at` datetime DEFAULT NULL,
   `on_seconds` int(11) DEFAULT NULL,
+  `trig` varchar(16) DEFAULT NULL,
   `level_before` int(11) DEFAULT NULL,
   `level_after` int(11) DEFAULT NULL,
-  `refilled_at` datetime DEFAULT NULL,
+  `empty` tinyint(1) DEFAULT NULL,
+  `full` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -740,7 +740,7 @@ class CHydroMainController():
 		self.websocketd.broadcast(self.make_result(True, message))
 
 		data = {'command': 'refill_record', 'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
-			'on_seconds':  result['past'], 'trigger': 'switch', 'empty': empty, 'full': full}
+			'on_seconds':  result['past'], 'trig': 'switch', 'empty': 1 if empty else 0, 'full': 1 if full else 0}
 		self.db_manage.insert_refill_record(data)
 		self.websocketd.broadcast(data)
 
@@ -799,7 +799,7 @@ class CHydroMainController():
 		self.websocketd.broadcast(self.make_result(True, message))
 
 		data = {'command': 'refill_record', 'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
-			'on_seconds':  result['past'], 'trigger': 'level', 'level_before': level_before, 'level_after': level_after}
+			'on_seconds':  result['past'], 'trig': 'level', 'level_before': level_before, 'level_after': level_after}
 		self.db_manage.insert_refill_record(data)
 		self.websocketd.broadcast(data)
 		self.prev_level = level_after
