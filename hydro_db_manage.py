@@ -86,14 +86,21 @@ class CHydroDatabaseManager():
 		return keys
 
 	def getone(self, table):
-		return self.get(table, "where no = 1")[0]
+		data = self.get(table, "where no = 1")
+		if len(data) >= 1:
+			return data[0]
+		else:
+			return {}
 
 	def getlatest(self, table, num = 1):
-		ret = self.get(table, f"order by no desc limit {num}")
+		data = self.get(table, f"order by no desc limit {num}")
 		if num == 1:
-			return ret[0]
+			if len(data) >= 1:
+				return data[0]
+			else:
+				return {}
 		else:
-			return ret
+			return data
 
 	def get(self, table, condition = None):
 		with self.lock_db:
@@ -121,12 +128,12 @@ class CHydroDatabaseManager():
 				cur.close()
 
 				if len(dic_array) == 0:
-					dic_array = [{}]
+					dic_array = []
 				return dic_array
 	
 			except mariadb.Error as e:
 				self.logger.error(f"mariadb.Error: {e}")
-				return [{}]
+				return []
 
 	def insert(self, table, data):
 		with self.lock_db:
