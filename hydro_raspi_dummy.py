@@ -89,7 +89,7 @@ class CHydroRaspiController():
 
 		value = 50
 
-		if temperature == None:
+		if temperature is None:
 			temperature = 25.0
 
 		voltage = value * AREF / ADCRANGE

@@ -341,7 +341,7 @@ class CHydroMainController():
 		command = request['command']
 		self.logger.info(f"handle_request {command}")
 		func = self.command_table[command]
-		if func == None:
+		if func is None:
 			message = f"funknown command [{command}] received."
 			self.logger.error(message)
 			response = self.make_result(False, message)
@@ -532,7 +532,7 @@ class CHydroMainController():
 
 		items = ['air_temp', 'humidity', 'water_temp', 'water_level', 'tds_level']
 		for item in items:
-			if report[item] == None:
+			if report[item] is None:
 				del report[item]
 				continue
 
@@ -700,7 +700,7 @@ class CHydroMainController():
 
 	def measure_sensor(self, request):
 		value = self.raspi_ctl.measure_sensor(request['sensor_kind'])
-		if value == None:
+		if value is None:
 			message = f"{request['sensor_kind']} could not read."
 			ret = False
 		else:
@@ -827,9 +827,7 @@ class CHydroMainController():
 
 	def subpump_stop(self, request=None):
 		ret = self.raspi_ctl.subpump_switch(False)
-		if request is None:
-			self.websocketd.broadcast({'command': 'refill_update', 'refill_switch': False})
-		else:
+		if request is not None:
 			self.websocketd.broadcast(self.subpump_update())
 		return self.make_result(ret, "subpump switch off")
 

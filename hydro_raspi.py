@@ -192,7 +192,7 @@ class CHydroRaspiController():
 		if measured == True:
 			voltage = value * AREF / ADCRANGE
 			ecValue = (133.42*voltage**3 - 255.86*voltage**2 + 857.39*voltage) * KVALUE
-			if temperature == None:
+			if temperature is None:
 				ecValue25 = ecValue
 				self.logger.debug(f"ecValue={ecValue} (not adjust)")
 			else:
