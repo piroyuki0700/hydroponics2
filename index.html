@@ -250,14 +250,13 @@
     <div id="pane_pump" class="tab-pane content_full">
       <div class="content_top bg-dark"></div>
       <div class="content_main">
-        <div class="content_control">
+        <div class="content_control debug_border">
           <i class="fa fa-refresh text-secondary m-2"> 循環</i>
-          <div class="mt-1">
+          <div class="ml-2">
             オート動作<br/>
             <button class="btn btn-primary command_button mx-3" onclick="pumpButtonClick('auto_start')">開始</button>
             <button class="btn btn-danger command_button" onclick="pumpButtonClick('auto_stop')">停止</button>
-          </div>
-          <div class="mt-1">
+            <br/>
             マニュアル動作<br/>
             <button class="btn btn-primary command_button mx-3" onclick="pumpButtonClick('manual_start', -1)">連続</button>
             <button class="btn btn-danger command_button" onclick="pumpButtonClick('manual_stop')">停止</button><br/>
@@ -267,6 +266,23 @@
             <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 300)">５分</button>
             <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 600)">10分</button>
             <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 1200)">20分</button>
+          </div>
+          <i class="fa fa-tint text-secondary m-2 mt-4"> 水の補充</i>
+          <div class="ml-2 bg-light">
+            <div class="mb-1">
+              水位
+              <span class="border rounded p-1"><i id="subpump_working" class="fa fa-refresh text-secondary"></i> <span id="refill_level"></span></80>％</span>
+              <span class="border rounded p-1">上 <i id="icon_float_upper" class="fa fa-check-circle text-success"></i></span>
+              <span class="border rounded p-1">下 <i id="icon_float_lower" class="fa fa-check-circle text-success"></i></span>
+              <span class="border rounded p-1">補 <i id="icon_float_sub" class="fa fa-check-circle text-success"></i></span>
+            </div>
+            <button class="btn btn-secondary command_button ml-3" onclick="subPumpButtonClick('available')">状態</button>
+            <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('refill')">補充</button>
+            <button class="btn btn-secondary command_button ml-3" onclick="subPumpButtonClick('start')">ON</button>
+            <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('stop')">OFF</button>
+            <div class="small" id="refill_record1"></div>
+            <div class="small" id="refill_record2"></div>
+            <div class="small" id="refill_record3"></div>
           </div>
         </div>
         <div class="content_info">
@@ -422,14 +438,6 @@
             <button onclick="debugButtonTweet()" class="btn btn-secondary command_button">Tweet</button>
             <button onclick="debugButtonLine()" class="btn btn-secondary command_button">Line</button>
           </span>
-        </div>
-        <div class="mt-1">
-          <span class="small">サブポンプ：</span>
-          <button onclick="subPumpButtonClick('available')" class="btn btn-secondary command_button">状態</button>
-          <button onclick="subPumpButtonClick('refill')" class="btn btn-secondary command_button">補充</button>
-          <button onclick="subPumpButtonClick('start')" class="btn btn-secondary command_button">ON</button>
-          <button onclick="subPumpButtonClick('stop')" class="btn btn-secondary command_button">OFF</button>
-          <span class="small" id="refill_record"></span>
         </div>
         <textarea class="content_message border border-dark" id="debug_message"></textarea>
         <div>

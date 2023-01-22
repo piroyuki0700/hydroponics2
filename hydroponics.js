@@ -153,7 +153,7 @@ function websocket_message(event)
       setValueSchedule(data);
       setValueSensorLimit(data);
       setValuePumpStatus(data);
-      setValueRefillRecord(data);
+      setValueRefillUpdate(data);
       break;
 
     case 'report':
@@ -184,8 +184,8 @@ function websocket_message(event)
       setValueTmpPicture(data);
       break;
 
-    case 'refill_record':
-      setValueRefillRecord(data);
+    case 'refill_update':
+      setValueRefillUpdate(data);
       break;
 
     case 'result':
@@ -420,11 +420,40 @@ function setValueTmpPicture(data) {
   }
 }
 
-function setValueRefillRecord(data) {
-    if ('refilled_at' in data) {
-      message = data['level_before'] + "→" + data['level_after'] + "(" + data['on_seconds'] + " sec) " + data['refilled_at'];
-      $('#refill_record').text(message);
+function setValueRefillUpdate(data) {
+  // サブポンプ動作状態
+  if ('refill_switch' in data) {
+    if (data['refill_switch']) {
+      $('#subpump_working').addClass('text-primary').removeClass('text-secondary').addClass('fa-spin')
+    } else {
+      $('#subpump_working').removeClass('text-primary').addClass('text-secondary').removeClass('fa-spin')
     }
+  }
+  // メインタンク水位
+  if ('refill_level' in data) {
+    $('#refill_level').text(data['refill_level'])
+  }
+  // フロートスイッチ状態
+  float_switchs = ['upper', 'lower', 'sub'];
+  for (const float_switch of float_switchs) {
+    if ('refill_float_' + float_switch in data) {
+      if (data['refill_float_' + float_switch]) {
+        $('#icon_float_' + float_switch).removeClass('fa-times-circle').removeClass('text-danger').addClass('fa-check-circle').addClass('text-success')
+      } else {
+        $('#icon_float_' + float_switch).removeClass('fa-check-circle').removeClass('text-success').addClass('fa-times-circle').addClass('text-danger')
+      }
+    }
+  }
+  // 水の補充記録、過去3回分
+  if ('refill_record1' in data) {
+    $('#refill_record1').text(data['refill_record1']);
+  }
+  if ('refill_record2' in data) {
+    $('#refill_record2').text(data['refill_record2']);
+  }
+  if ('refill_record3' in data) {
+    $('#refill_record3').text(data['refill_record3']);
+  }
 }
 //
 // メイン：ポンプボタン
