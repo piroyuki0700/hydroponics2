@@ -86,10 +86,14 @@ class CHydroDatabaseManager():
 		return keys
 
 	def getone(self, table):
-		return self.get(table, "no = 1")
+		return self.get(table, "where no = 1")[0]
 
-	def getlatest(self, table):
-		return self.get(table, f"no = (select max(no) from {table})")
+	def getlatest(self, table, num = 1):
+		ret = self.get(table, f"order by no desc limit {num}")
+		if num == 1:
+			return ret[0]
+		else:
+			return ret
 
 	def get(self, table, condition = None):
 		with self.lock_db:
@@ -100,27 +104,29 @@ class CHydroDatabaseManager():
 				if condition is None:
 					sql = f"select * from {table}"
 				else:
-					sql = f"select * from {table} where {condition}"
+					sql = f"select * from {table} {condition}"
 	
+				#print(sql)
 				cur.execute(sql)
 	
-				dic = {}
-				row = cur.fetchone()
-				if row is None:
-					return dic
-	
-				for i in range(1, len(row)):
-					if isinstance(row[i], datetime):
-						dic[keys[i]]=row[i].strftime('%Y/%m/%d %H:%M:%S')
-					else:
-						dic[keys[i]]=row[i]
-	
+				dic_array = []
+				for row in cur.fetchall():
+					dic = {}
+					for i in range(1, len(row)):
+						if isinstance(row[i], datetime):
+							dic[keys[i]]=row[i].strftime('%Y/%m/%d %H:%M:%S')
+						else:
+							dic[keys[i]]=row[i]
+					dic_array.append(dic)
 				cur.close()
-				return dic
+
+				if len(dic_array) == 0:
+					dic_array = [{}]
+				return dic_array
 	
 			except mariadb.Error as e:
 				self.logger.error(f"mariadb.Error: {e}")
-				return {}
+				return [{}]
 
 	def insert(self, table, data):
 		with self.lock_db:
@@ -138,7 +144,7 @@ class CHydroDatabaseManager():
 				columns = ','.join(column)
 				values = ','.join(value)
 				sql = f"insert into {table} ({columns}) values ({values})"
-	#			self.logger.debug(sql)
+				#self.logger.debug(sql)
 	
 				cur.execute(sql)
 				cur.close()
@@ -163,7 +169,7 @@ class CHydroDatabaseManager():
 	
 				columns = ','.join(column)
 				sql = f"update {table} set {columns} where no = 1"
-#				self.logger.debug(sql)
+				#self.logger.debug(sql)
 				cur.execute(sql)
 				cur.close()
 				self.conn.commit()
@@ -199,9 +205,24 @@ class CHydroDatabaseManager():
 		self.logger.debug("called")
 		return self.getlatest('report')
 
+	def make_refill_record_string(self, data):
+		if data['trig'] == "level":
+			result = f"{data['refilled_at']}({data['on_seconds']} sec) {data['level_before']}%→{data['level_after']}%"
+		else:
+			result = f"{data['refilled_at']}({data['on_seconds']} sec) 上:{data['upper']} 下:{data['lower']}"
+		return result
+
 	def get_latest_refill_record(self):
 		self.logger.debug("called")
-		return self.getlatest('refill_record')
+		dic_array = self.getlatest('refill_record', 3)
+		result = {}
+		if (len(dic_array) >= 1):
+			result['refill_record1'] = self.make_refill_record_string(dic_array[0])
+		if (len(dic_array) >= 2):
+			result['refill_record2'] = self.make_refill_record_string(dic_array[1])
+		if (len(dic_array) >= 3):
+			result['refill_record3'] = self.make_refill_record_string(dic_array[2])
+		return result
 
 	def set_basic(self, data):
 		self.logger.debug("called")
