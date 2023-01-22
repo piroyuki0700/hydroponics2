@@ -148,7 +148,7 @@ class CHydroMainController():
 			'pump_auto_stop'   : self.pump_auto_stop,
 			'pump_manual_start': self.pump_manual_start,
 			'pump_manual_stop' : self.pump_manual_stop,
-			'subpump_available': self.subpump_available,
+			'subpump_update'   : self.subpump_update,
 			'subpump_refill'   : self.subpump_refill,
 			'subpump_start'    : self.subpump_start,
 			'subpump_stop'     : self.subpump_stop,
@@ -334,7 +334,7 @@ class CHydroMainController():
 			status = self.evaluate(report)
 			data.update(report)
 			data.update(status)
-		data.update(self.subpump_available())
+		data.update(self.subpump_update())
 		return data
 
 	def handle_request(self, request):
@@ -810,7 +810,7 @@ class CHydroMainController():
 		self.websocketd.broadcast(data)
 		self.prev_level = level_after
 
-	def subpump_available(self, request=None):
+	def subpump_update(self, request=None):
 		subpump_status = self.raspi_ctl.subpump_status
 		level = self.raspi_ctl.measure_water_level()['water_level']
 		float_upper = self.raspi_ctl.check_float_upper()
@@ -822,12 +822,15 @@ class CHydroMainController():
 
 	def subpump_start(self, request=None):
 		ret = self.raspi_ctl.subpump_switch(True)
-		self.websocketd.broadcast(self.subpump_available())
+		self.websocketd.broadcast(self.subpump_update())
 		return self.make_result(ret, "subpump switch on")
 
 	def subpump_stop(self, request=None):
 		ret = self.raspi_ctl.subpump_switch(False)
-		self.websocketd.broadcast(self.subpump_available())
+		if request is None:
+			self.websocketd.broadcast({'command': 'refill_update', 'refill_switch': False})
+		else:
+			self.websocketd.broadcast(self.subpump_update())
 		return self.make_result(ret, "subpump switch off")
 
 	def make_result(self, ret, message, popup=False):
