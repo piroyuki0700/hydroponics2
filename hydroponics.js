@@ -117,6 +117,7 @@ function websocket_close(event)
   webSocket = null;
   $('#reconnectButton').show();
   setValuePumpStatus({'pump_status': 'manual_stop', 'seconds': 0});
+  setValueRefillUpdate({ 'refill_switch': false})
 
   // 1分後に１回だけ自動再接続を試みる
   if (connectRetry == true) {
