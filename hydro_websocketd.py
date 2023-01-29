@@ -752,7 +752,7 @@ class CHydroMainController():
 			'trig': 'switch', 'upper': upper, 'lower': lower}
 		self.db_manage.insert_refill_record(data)
 
-		data = {'command': 'refill_record'}
+		data = self.subpump_update()
 		data.update(self.db_manage.get_latest_refill_record())
 		self.websocketd.broadcast(data)
 		return True
@@ -817,7 +817,7 @@ class CHydroMainController():
 			'trig': 'level', 'level_before': level_before, 'level_after': level_after}
 		self.db_manage.insert_refill_record(data)
 
-		data = {'command': 'refill_record'}
+		data = self.subpump_update()
 		data.update(self.db_manage.get_latest_refill_record())
 		self.websocketd.broadcast(data)
 		self.prev_level = level_after
@@ -825,8 +825,9 @@ class CHydroMainController():
 
 	def subpump_update(self, request=None):
 		self.logger.debug("called")
-		level_active = True if int(request['level_active']) else False
-		print(f"level_active={level_active}")
+		level_active = True
+		if request is not None:
+			level_active = True if int(request['level_active']) else False
 
 		data = {'command': 'refill_update'}
 		data.update(self.subpump_status(level_active))
