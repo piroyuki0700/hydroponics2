@@ -47,7 +47,7 @@ gpio_subp_level = 6
 
 class CHydroRaspiController():
 	logger = None
-	subpump_status = False
+	subpump_working = False
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -157,7 +157,7 @@ class CHydroRaspiController():
 	# サブポンプ動作
 	def subpump_switch(self, enable):
 		self.logger.debug(f"called. enable={enable}")
-		self.subpump_status = enable
+		self.subpump_working = enable
 		return True
 
 	# サブタンクの水の状態確認

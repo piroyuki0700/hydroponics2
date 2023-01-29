@@ -63,7 +63,7 @@ RETRY_TDS_DELAY = 0.5
 class CHydroRaspiController():
 	logger = None
 	event_subpump = None
-	subpump_status = False
+	subpump_working = False
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -279,7 +279,7 @@ class CHydroRaspiController():
 	# サブポンプ直接操作
 	def subpump_switch(self, enable):
 		self.logger.debug(f"called. enable={enable}")
-		self.subpump_status = enable
+		self.subpump_working = enable
 		GPIO.setup(gpio_subpump, GPIO.OUT)
 		GPIO.output(gpio_subpump, GPIO.HIGH if enable is True else GPIO.LOW)
 		return True
@@ -298,6 +298,8 @@ class CHydroRaspiController():
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
 		self.logger.debug("called")
+		self.event_subpump.clear()
+
 		# サブタンクの水がなくなった場合
 		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 1000)
 		# メインタンクが満タンになった場合

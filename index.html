@@ -271,7 +271,7 @@
           <div class="ml-2 bg-light">
             <div class="mb-1">
               水位
-              <span class="border rounded p-1"><i id="subpump_working" class="fa fa-refresh text-secondary"></i> <span id="refill_level"></span></80>％</span>
+              <span class="border rounded p-1"><i id="subpump_working" class="fa fa-refresh text-secondary"></i> <span id="refill_level"></span>％</span>
               <span class="border rounded p-1">上 <i id="icon_float_upper" class="fa fa-check-circle text-success"></i></span>
               <span class="border rounded p-1">下 <i id="icon_float_lower" class="fa fa-check-circle text-success"></i></span>
               <span class="border rounded p-1">補 <i id="icon_float_sub" class="fa fa-check-circle text-success"></i></span>
@@ -280,6 +280,7 @@
             <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('refill')">補充</button>
             <button class="btn btn-secondary command_button ml-3" onclick="subPumpButtonClick('start')">ON</button>
             <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('stop')">OFF</button>
+            <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="level_active" value="1" checked>
             <div class="small" id="refill_record1"></div>
             <div class="small" id="refill_record2"></div>
             <div class="small" id="refill_record3"></div>

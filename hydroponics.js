@@ -433,7 +433,10 @@ function setValueRefillUpdate(data) {
   // メインタンク水位
   if ('refill_level' in data) {
     $('#refill_level').text(data['refill_level'])
+  } else {
+    $('#refill_level').text('ー')
   }
+
   // フロートスイッチ状態
   float_switchs = ['upper', 'lower', 'sub'];
   for (const float_switch of float_switchs) {
@@ -775,7 +778,9 @@ function debugButtonMeasure(sensor_kind) {
 // デバッグ：サブポンプ動作
 //
 function subPumpButtonClick(request) {
-  websocket_send({'command': 'subpump_' + request});
+  data = {'command': 'subpump_' + request}
+  data["level_active"] = $('input[name="level_active"]').prop("checked")?"1":"0";
+  websocket_send(data);
 }
 
 //
