@@ -32,7 +32,8 @@ MINUTE_REFILL = 55
 DEFAULT_ONTIME = 7 * 60
 DEFAULT_OFFTIME = 8 * 60
 
-SUBPUMP_TIMER_TICK = 10
+SUBPUMP_MANUAL_LOOP_MAX = 10
+SUBPUMP_MANUAL_LOOP_DELAY = 10
 
 SAVE_PICTURE_DIR = 'picture'
 TMP_PICTURE_DIR = 'tmp_picture'
@@ -854,8 +855,7 @@ class CHydroMainController():
 		ret = False
 		if not self.subpump_updater_on and not self.raspi_ctl.subpump_working:
 			self.event_stop_timer.clear()
-			self.raspi_ctl.subpump_switch(True)
-			self.future_subpump = self.executor_subpump.submit(self.subpump_updater, request)
+			self.future_subpump = self.executor_subpump.submit(self.subpump_manual, request)
 			ret = True
 
 		return self.make_result(ret, "subpump switch on")
@@ -864,7 +864,6 @@ class CHydroMainController():
 		self.logger.debug("called")
 		ret = False
 		if self.subpump_updater_on:
-			self.raspi_ctl.subpump_switch(False)
 			self.event_stop_timer.set()
 			self.future_subpump.result()
 			ret = True
@@ -872,16 +871,24 @@ class CHydroMainController():
 		if request is not None:
 			return self.make_result(ret, "subpump switch off")
 
-	def subpump_updater(self, request):
+	def subpump_manual(self, request):
 		self.logger.debug("called")
 		self.subpump_updater_on = True
+		self.raspi_ctl.subpump_switch(True)
+
+		count = 0
 		while not self.event_stop_timer.is_set():
-			self.logger.debug("loop")
 			self.websocketd.broadcast(self.subpump_update(request))
-			self.event_stop_timer.wait(SUBPUMP_TIMER_TICK)
+			self.event_stop_timer.wait(SUBPUMP_MANUAL_LOOP_DELAY)
+			count += 1
+			if count >= SUBPUMP_MANUAL_LOOP_MAX:
+				break
+
+		self.raspi_ctl.subpump_switch(False)
 		self.event_stop_timer.clear()
-		self.websocketd.broadcast(self.subpump_update(request))
 		self.subpump_updater_on = False
+
+		self.websocketd.broadcast(self.subpump_update(request))
 		self.logger.debug("end")
 		return True
 
