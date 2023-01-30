@@ -280,7 +280,8 @@
             <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('refill')">補充</button>
             <button class="btn btn-secondary command_button ml-3" onclick="subPumpButtonClick('start')">ON</button>
             <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('stop')">OFF</button>
-            <span class="small">%表示</span><input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="level_active" value="1" checked>
+            <span class="small">%表示</span>
+            <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="level_active" value="1" checked>
             <div class="small" id="refill_record1"></div>
             <div class="small" id="refill_record2"></div>
             <div class="small" id="refill_record3"></div>
@@ -310,8 +311,8 @@
           <i class="fa fa-camera text-secondary m-2"> カメラ撮影</i>
           <div class="mt-1">
             <button class="btn btn-primary command_button mx-3" onclick="cameraButtonClick(0)">今すぐ</button>
-            <button class="btn btn-primary command_button" onclick="cameraButtonClick(5)">５秒後</button>
-            <button class="btn btn-primary command_button" onclick="cameraButtonClick(10)">10秒後</button>
+            <button class="btn btn-secondary command_button" onclick="cameraButtonClick(5)">５秒後</button>
+            <button class="btn btn-secondary command_button" onclick="cameraButtonClick(10)">10秒後</button>
             <button class="btn btn-danger command_button ml-3" onclick="cameraButtonClick(-1)">中止</button>
           </div>
         </div>
