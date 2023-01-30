@@ -197,7 +197,7 @@ class CHydroMainController():
 	def scheduler_start(self):
 		self.logger.info("called ------------------------------")
 
-		if not int(self.schedule['schedule_active']):
+		if int(self.schedule['schedule_active']):
 			self.logger.info("schedule is inactive")
 			self.raspi_ctl.update_led('none')
 			return
@@ -314,7 +314,7 @@ class CHydroMainController():
 			del self.manual_timer
 			self.manual_timer = None
 
-		self.raspi_ctl.subpump_switch(False)
+		self.subpump_stop()
 		self.scheduler_stop()
 
 	def scheduler_stop(self):
@@ -736,9 +736,8 @@ class CHydroMainController():
 	def subpump_main_switch(self):
 		self.logger.debug("called")
 
-		self.subpump_status(False, True)
+		self.websocketd.broadcast(self.subpump_status_command(True))
 		result = self.raspi_ctl.subpump_refill(self.schedule['refill_min'], self.schedule['refill_max'])
-		self.subpump_status(False, False)
 		message = f"{result['past']}秒間、水を追加しました。"
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
@@ -755,7 +754,7 @@ class CHydroMainController():
 			'trig': 'switch', 'upper': upper, 'lower': lower}
 		self.db_manage.insert_refill_record(data)
 
-		data = self.subpump_update()
+		data = self.subpump_status_command()
 		data.update(self.db_manage.get_latest_refill_record())
 		self.websocketd.broadcast(data)
 		return True
@@ -803,9 +802,8 @@ class CHydroMainController():
 			seconds = self.schedule['refill_min']
 		self.logger.debug(f"seconds={seconds}")
 
-		self.subpump_status(False, True)
+		self.websocketd.broadcast(self.subpump_status_command(True))
 		result = self.raspi_ctl.subpump_refill(self.schedule['refill_min'], seconds)
-		self.subpump_status(False, False)
 		message = f"{result['past']}秒間、水を追加しました。"
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
@@ -822,7 +820,7 @@ class CHydroMainController():
 			'trig': 'level', 'level_before': level_before, 'level_after': level_after}
 		self.db_manage.insert_refill_record(data)
 
-		data = self.subpump_update()
+		data = self.subpump_status_command()
 		data.update(self.db_manage.get_latest_refill_record())
 		self.websocketd.broadcast(data)
 		self.prev_level = level_after
@@ -834,13 +832,16 @@ class CHydroMainController():
 		if request is not None:
 			level_active = True if int(request['level_active']) else False
 
+		return self.subpump_status_command(False, level_active)
+
+	def subpump_status_command(self, force_on=False, level_active=True):
 		data = {'command': 'refill_update'}
-		data.update(self.subpump_status(level_active))
+		data.update(self.subpump_status(force_on, level_active))
 		return data
 
-	def subpump_status(self, level_active=True, switch_on=False):
+	def subpump_status(self, force_on=False, level_active=True):
 		data = {}
-		data['refill_switch'] = switch_on or self.raspi_ctl.subpump_working
+		data['refill_switch'] = force_on or self.raspi_ctl.subpump_working
 		data['refill_float_upper'] = self.raspi_ctl.check_float_upper()
 		data['refill_float_lower'] = self.raspi_ctl.check_float_lower()
 		data['refill_float_sub'] = self.raspi_ctl.subpump_available()
@@ -859,7 +860,7 @@ class CHydroMainController():
 
 		return self.make_result(ret, "subpump switch on")
 
-	def subpump_stop(self, request):
+	def subpump_stop(self, request=None):
 		self.logger.debug("called")
 		ret = False
 		if self.subpump_updater_on:

@@ -250,7 +250,7 @@
     <div id="pane_pump" class="tab-pane content_full">
       <div class="content_top bg-dark"></div>
       <div class="content_main">
-        <div class="content_control debug_border">
+        <div class="content_control">
           <i class="fa fa-refresh text-secondary m-2"> 循環</i>
           <div class="ml-2">
             オート動作<br/>
@@ -267,7 +267,7 @@
             <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 600)">10分</button>
             <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 1200)">20分</button>
           </div>
-          <i class="fa fa-tint text-secondary m-2 mt-4"> 水の補充</i>
+          <i class="fa fa-tint text-secondary m-2 mt-3"> 水の補充</i>
           <div class="ml-2 bg-light">
             <div class="mb-1">
               水位
@@ -280,7 +280,7 @@
             <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('refill')">補充</button>
             <button class="btn btn-secondary command_button ml-3" onclick="subPumpButtonClick('start')">ON</button>
             <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('stop')">OFF</button>
-            <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="level_active" value="1" checked>
+            <span class="small">%表示</span><input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="level_active" value="1" checked>
             <div class="small" id="refill_record1"></div>
             <div class="small" id="refill_record2"></div>
             <div class="small" id="refill_record3"></div>
