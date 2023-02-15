@@ -47,6 +47,7 @@ gpio_subp_level = 6
 
 class CHydroRaspiController():
 	logger = None
+	subpump_working = False
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -64,10 +65,12 @@ class CHydroRaspiController():
 	def measure_temp_humid(self):
 		self.logger.debug("called")
 		return {'air_temp': 25.5, 'humidity': 45.6}
+#		return {'air_temp': None, 'humidity': None}
 
 	def measure_water_temp(self):
 		self.logger.debug("called")
 		return {'water_temp': 23.4}
+#		return {'water_temp': None}
 
 	def measure_water_level(self):
 		self.logger.debug("called")
@@ -85,6 +88,9 @@ class CHydroRaspiController():
 		KVALUE = 1.0274
 
 		value = 50
+
+		if temperature is None:
+			temperature = 25.0
 
 		voltage = value * AREF / ADCRANGE
 		ecValue = (133.42*voltage**3 - 255.86*voltage**2 + 857.39*voltage) * KVALUE
@@ -129,6 +135,15 @@ class CHydroRaspiController():
 			self.logger.error(traceback.format_exc())
 			return {}
 
+	# タンクの水チェック
+	def check_float_upper(self):
+		self.logger.debug("called")
+		return False
+
+	def check_float_lower(self):
+		self.logger.debug("called")
+		return True
+
 	# LED ON/OFF
 	def set_led(self, color, state):
 		self.logger.debug(f"called. {color}={state}")
@@ -142,6 +157,7 @@ class CHydroRaspiController():
 	# サブポンプ動作
 	def subpump_switch(self, enable):
 		self.logger.debug(f"called. enable={enable}")
+		self.subpump_working = enable
 		return True
 
 	# サブタンクの水の状態確認
@@ -150,12 +166,14 @@ class CHydroRaspiController():
 		return True
 
 	# サブタンクの水終了コールバック
-	def subpump_empty(self):
-		self.logger.warning("The sub tank is empty.")
+	def subpump_callback(self):
+		self.logger.debug("called")
 
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
 		time.sleep(10)
 		return {'past': 10, 'empty': True}
 
-
+	# 夜間スイッチ
+	def nightly_switch(self, enable):
+		self.logger.debug(f"called. enable={enable}")

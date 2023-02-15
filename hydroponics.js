@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2022.12.12');
+  $('#version').text('Ver.2023.1.30');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -117,6 +117,7 @@ function websocket_close(event)
   webSocket = null;
   $('#reconnectButton').show();
   setValuePumpStatus({'pump_status': 'manual_stop', 'seconds': 0});
+  setValueRefillUpdate({ 'refill_switch': false})
 
   // 1分後に１回だけ自動再接続を試みる
   if (connectRetry == true) {
@@ -153,7 +154,7 @@ function websocket_message(event)
       setValueSchedule(data);
       setValueSensorLimit(data);
       setValuePumpStatus(data);
-      setValueRefillRecord(data);
+      setValueRefillUpdate(data);
       break;
 
     case 'report':
@@ -184,8 +185,8 @@ function websocket_message(event)
       setValueTmpPicture(data);
       break;
 
-    case 'refill_record':
-      setValueRefillRecord(data);
+    case 'refill_update':
+      setValueRefillUpdate(data);
       break;
 
     case 'result':
@@ -308,9 +309,6 @@ function setValueSchedule(data)
   }
 
   $('input[name="schedule_active"]').bootstrapToggle(data['schedule_active']?'on':'off');
-  $('input[name="refill_active"]').bootstrapToggle(data['refill_active']?'on':'off');
-  $('input[name="refill_min"]').val(data['refill_min']);
-  $('input[name="refill_max"]').val(data['refill_max']);
   $('input[name="time_morning"]').val(data['time_morning']);
   $('input[name="time_noon"]').val(data['time_noon']);
   $('input[name="time_evening"]').val(data['time_evening']);
@@ -321,10 +319,14 @@ function setValueSchedule(data)
   $('input[name="noon_off"]').val(data['noon_off']);
   $('input[name="evening_on"]').val(data['evening_on']);
   $('input[name="evening_off"]').val(data['evening_off']);
+  $('input[name="nightly_active"]').bootstrapToggle(data['nightly_active']?'on':'off');
   $('input[name="time_spot1"]').val(data['time_spot1']);
   $('input[name="time_spot2"]').val(data['time_spot2']);
   $('input[name="time_spot3"]').val(data['time_spot3']);
   $('input[name="spot_on"]').val(data['spot_on']);
+  $('input[name="refill_trigger"]').val([data['refill_trigger']]);
+  $('input[name="refill_min"]').val(data['refill_min']);
+  $('input[name="refill_max"]').val(data['refill_max']);
   $('input[name="camera1"]').val(data['camera1']);
   $('input[name="camera2"]').val(data['camera2']);
   $('input[name="camera3"]').val(data['camera3']);
@@ -419,11 +421,43 @@ function setValueTmpPicture(data) {
   }
 }
 
-function setValueRefillRecord(data) {
-    if ('refilled_at' in data) {
-      message = data['level_before'] + "→" + data['level_after'] + "(" + data['on_seconds'] + " sec) " + data['refilled_at'];
-      $('#refill_record').text(message);
+function setValueRefillUpdate(data) {
+  // サブポンプ動作状態
+  if ('refill_switch' in data) {
+    if (data['refill_switch']) {
+      $('#subpump_working').addClass('text-primary').removeClass('text-secondary').addClass('fa-spin')
+    } else {
+      $('#subpump_working').removeClass('text-primary').addClass('text-secondary').removeClass('fa-spin')
     }
+  }
+  // メインタンク水位
+  if ('refill_level' in data) {
+    $('#refill_level').text(data['refill_level'])
+  } else {
+    $('#refill_level').text('ー')
+  }
+
+  // フロートスイッチ状態
+  float_switchs = ['upper', 'lower', 'sub'];
+  for (const float_switch of float_switchs) {
+    if ('refill_float_' + float_switch in data) {
+      if (data['refill_float_' + float_switch]) {
+        $('#icon_float_' + float_switch).removeClass('fa-times-circle').removeClass('text-danger').addClass('fa-check-circle').addClass('text-success')
+      } else {
+        $('#icon_float_' + float_switch).removeClass('fa-check-circle').removeClass('text-success').addClass('fa-times-circle').addClass('text-danger')
+      }
+    }
+  }
+  // 水の補充記録、過去3回分
+  if ('refill_record1' in data) {
+    $('#refill_record1').text(data['refill_record1']);
+  }
+  if ('refill_record2' in data) {
+    $('#refill_record2').text(data['refill_record2']);
+  }
+  if ('refill_record3' in data) {
+    $('#refill_record3').text(data['refill_record3']);
+  }
 }
 //
 // メイン：ポンプボタン
@@ -499,10 +533,14 @@ function scheduleCommitClick() {
   data = Object.fromEntries(formData);
 
   // トグルスイッチの値の追加
-  data["schedule_active"]  = $('input[name="schedule_active"]').prop("checked")?"1":"0";
-  data["refill_active"]  = $('input[name="refill_active"]').prop("checked")?"1":"0";
-  data["notify_active"]    = $('input[name="notify_active"]').prop("checked")?"1":"0";
+  data["schedule_active"] = $('input[name="schedule_active"]').prop("checked")?"1":"0";
+  data["nightly_active"] = $('input[name="nightly_active"]').prop("checked")?"1":"0";
+  data["notify_active"] = $('input[name="notify_active"]').prop("checked")?"1":"0";
   data["emergency_active"] = $('input[name="emergency_active"]').prop("checked")?"1":"0";
+
+  // ラジオボタンの値の取得
+  data["refill_trigger"] = $('input[name="refill_trigger"]:checked').val();
+  printDebugMessage("trigger=" + $('input[name="refill_trigger"]:checked').val());
 
   // 時刻指定なしにしたいとき（マイナス値は無効）
   const items = ["time_spot1", "time_spot2", "time_spot3", 
@@ -739,15 +777,17 @@ function debugButtonMeasure(sensor_kind) {
 //
 // デバッグ：サブポンプ動作
 //
-function debugButtonSubPump(request) {
-  websocket_send({'command': 'subpump_' + request});
+function subPumpButtonClick(request) {
+  data = {'command': 'subpump_' + request}
+  data["level_active"] = $('input[name="level_active"]').prop("checked")?"1":"0";
+  websocket_send(data);
 }
 
 //
 // デバッグ：定時動作テスト
 //
 function debugButtonReport() {
-  websocket_send({'command': 'make_report', 'save': true});
+  websocket_send({'command': 'make_report'});
 }
 
 //

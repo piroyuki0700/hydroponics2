@@ -11,56 +11,69 @@ import time
 import re
 from decimal import *
 from datetime import datetime
-import logging
 import traceback
-import json
 import threading
 
 #AD/DAモジュール設定
-address = 0x48
-A0 = 0x40
-A1 = 0x41
-A2 = 0x42
-A3 = 0x43
+adda_address = 0x48
+adda_AIN0 = 0x40
+adda_AIN1 = 0x41
+adda_AIN2 = 0x42
+adda_AIN3 = 0x43
 
 # GPIO.BCM番号
-gpio_led = {'blue': 19, 'green': 16, 'yellow': 26, 'red': 20}
+gpio_led = {'blue': 19, 'green': 26, 'yellow': 21, 'red': 20}
 
-gpio_dht11 = D18	# 12番のBCM GPIO番号
-gpio_ds18 = 4
-gpio_pump = 17
-gpio_air = 22
+gpio_dht11 = D13
+gpio_ds18 = 7 # 1wire device. need to write the gpio setting in /boot/config.txt to use non-default gpio number
+gpio_pump = 6
+gpio_air = 5
+gpio_subpump = 10
+gpio_nightly = 4
 
-gpio_trig = 23
-gpio_echo = 24
-MAX_DISTANCE = 220
+gpio_float_upper = 24
+gpio_float_lower = 23
+gpio_float_sub = 18
+
+gpio_trig = 12
+gpio_echo = 16
+
+# パルス検出タイムアウト
+SONAR_TIMEOUT = (10 / 1000) # 10ms
+# 水面までの距離の有効範囲
 VALID_DISTANCE_MIN = 3
 VALID_DISTANCE_MAX = 30
-WATER_LEVEL_MAX = 29
+# センサーから底までの距離
+SENSOR_DISTANCE = 29
+# 満水時の水位
 WATER_LEVEL_FULL = 20
 
+# 水温計のデバイスファイル
 SYSFILE_DS18B20 = '/sys/bus/w1/devices/28-01204c43b99b/w1_slave'
-RETRY_TEMPHUMID_MAX = 5
+# 各センサーのリトライ回数とディレイ
+RETRY_TEMPHUMID_MAX = 3
 RETRY_TEMPHUMID_DELAY = 1
-RETRY_WATERTEMP_MAX = 5
+RETRY_WATERTEMP_MAX = 3
 RETRY_WATERTEMP_DELAY = 0.5
-RETRY_DISTANCE_MAX = 10
+RETRY_DISTANCE_MAX = 5
 RETRY_DISTANCE_DELAY = 0.5
-RETRY_TDS_MAX = 10
+RETRY_TDS_MAX = 5
 RETRY_TDS_DELAY = 0.5
-
-gpio_subp_relay = 5
-gpio_subp_level = 6
 
 class CHydroRaspiController():
 	logger = None
 	event_subpump = None
+	subpump_working = False
 
 	def __init__(self, logger):
 		self.logger = logger
 		self.logger.debug("called")
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
+		GPIO.setup(gpio_ds18, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+		GPIO.setup(gpio_float_upper, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		GPIO.setup(gpio_float_lower, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		GPIO.setup(gpio_float_sub, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 		self.event_subpump = threading.Event()
 
 	def __del__(self):
@@ -98,7 +111,6 @@ class CHydroRaspiController():
 
 	def measure_water_temp(self):
 		self.logger.debug("called")
-		GPIO.setup(gpio_ds18, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 		result = {'water_temp': None}
 		for i in range(RETRY_WATERTEMP_MAX):
@@ -121,11 +133,11 @@ class CHydroRaspiController():
 	def pulseIn(self, pin, level, timeOut):
 		t0 = time.time()
 		while(GPIO.input(pin) != level):
-			if((time.time() - t0) > timeOut * 0.000001):
+			if((time.time() - t0) > timeOut):
 				return 0
 		t0 = time.time()
 		while(GPIO.input(pin) == level):
-			if((time.time() - t0) > timeOut * 0.000001):
+			if((time.time() - t0) > timeOut):
 				return 0
 		pulseTime = (time.time() - t0) * 1000000
 		return pulseTime
@@ -136,7 +148,7 @@ class CHydroRaspiController():
 		GPIO.output(gpio_trig, GPIO.HIGH)
 		time.sleep(0.00001)
 		GPIO.output(gpio_trig, GPIO.LOW)
-		pingTime = self.pulseIn(gpio_echo, GPIO.HIGH, MAX_DISTANCE * 60)
+		pingTime = self.pulseIn(gpio_echo, GPIO.HIGH, SONAR_TIMEOUT)
 		distance = pingTime * 340.0 / 2.0 / 10000.0
 		return distance
 
@@ -155,7 +167,7 @@ class CHydroRaspiController():
 		result = {'distance': None, 'water_level': None}
 		if measured == True:
 			# %を計算（0～に制限）
-			water_level = int((WATER_LEVEL_MAX - distance) * 100 / WATER_LEVEL_FULL)
+			water_level = int((SENSOR_DISTANCE - distance) * 100 / WATER_LEVEL_FULL)
 #			water_level = min(100, max(water_level, 0))
 			water_level = max(water_level, 0)
 			self.logger.debug(f"distance:{distance} water_level:{water_level}")
@@ -170,11 +182,11 @@ class CHydroRaspiController():
 		ADCRANGE = 256
 		KVALUE = 1.0274
 		bus = smbus.SMBus(1)
-		bus.write_byte(address,A2)
+		bus.write_byte(adda_address, adda_AIN2)
 
 		measured = False
 		for i in range(RETRY_TDS_MAX):
-			value = bus.read_byte(address)
+			value = bus.read_byte(adda_address)
 			self.logger.debug(f"{i}: {value}")
 			if 0 < value and value < 100:
 				measured = True
@@ -185,7 +197,7 @@ class CHydroRaspiController():
 		if measured == True:
 			voltage = value * AREF / ADCRANGE
 			ecValue = (133.42*voltage**3 - 255.86*voltage**2 + 857.39*voltage) * KVALUE
-			if temperature == None:
+			if temperature is None:
 				ecValue25 = ecValue
 				self.logger.debug(f"ecValue={ecValue} (not adjust)")
 			else:
@@ -199,10 +211,10 @@ class CHydroRaspiController():
 	def measure_brightness(self):
 		self.logger.debug("called")
 		bus = smbus.SMBus(1)
-		bus.write_byte(address,A0)
-		value = bus.read_byte(address)
+		bus.write_byte(adda_address, adda_AIN0)
+		value = bus.read_byte(adda_address)
 		time.sleep(0.1)
-		value = bus.read_byte(address)	# 2回読まないとあまり変化しない
+		value = bus.read_byte(adda_address)	# 2回読まないとあまり変化しない
 		bus.close()
 		return {'brightness': 255 - value}
 
@@ -238,6 +250,17 @@ class CHydroRaspiController():
 			self.logger.error(traceback.format_exc())
 			return {}
 
+	# タンクの水チェック
+	def check_float_upper(self):
+		self.logger.debug("called")
+		float_sw = GPIO.input(gpio_float_upper)
+		return float_sw == GPIO.HIGH
+
+	def check_float_lower(self):
+		self.logger.debug("called")
+		float_sw = GPIO.input(gpio_float_sub)
+		return float_sw == GPIO.HIGH
+
 	# LED ON/OFF
 	def set_led(self, color, state):
 		self.logger.debug(f"called. {color}={state}")
@@ -256,26 +279,31 @@ class CHydroRaspiController():
 	# サブポンプ直接操作
 	def subpump_switch(self, enable):
 		self.logger.debug(f"called. enable={enable}")
-		GPIO.setup(gpio_subp_relay, GPIO.OUT)
-		GPIO.output(gpio_subp_relay, GPIO.HIGH if enable is True else GPIO.LOW)
+		self.subpump_working = enable
+		GPIO.setup(gpio_subpump, GPIO.OUT)
+		GPIO.output(gpio_subpump, GPIO.HIGH if enable is True else GPIO.LOW)
 		return True
 
 	# サブタンクの水の状態確認
 	def subpump_available(self):
 		self.logger.debug("called")
-		GPIO.setup(gpio_subp_level, GPIO.IN)
-		level = GPIO.input(gpio_subp_level)
-		return level == GPIO.HIGH
+		float_sw = GPIO.input(gpio_float_sub)
+		return float_sw == GPIO.LOW
 
 	# サブタンクの水終了コールバック
-	def subpump_empty(self):
-		self.logger.warning("The sub tank is empty.")
+	def subpump_callback(self):
+		self.logger.warning("cancel subpump")
 		self.event_subpump.set()
 
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
 		self.logger.debug("called")
-		GPIO.add_event_detect(gpio_subp_level, GPIO.FALLING, self.subpump_empty, 1000)
+		self.event_subpump.clear()
+
+		# サブタンクの水がなくなった場合
+		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 1000)
+		# メインタンクが満タンになった場合
+		GPIO.add_event_detect(gpio_float_upper, GPIO.RISING, self.subpump_callback, 1000)
 
 		start_time = datetime.now()
 		self.logger.debug("start_time: " + start_time.strftime('%Y/%m/%d %H:%M:%S'))
@@ -289,7 +317,16 @@ class CHydroRaspiController():
 		end_time = datetime.now()
 
 		past = int((end_time - start_time).total_seconds()) + 1
+		GPIO.remove_event_detect(gpio_float_sub)
+		GPIO.remove_event_detect(gpio_float_upper)
 		self.event_subpump.clear()
 
-		return {'past': past, 'empty': ret}
+		empty = not self.subpump_available()
+		return {'past': past, 'empty': empty}
 
+	# 夜間スイッチ
+	def nightly_switch(self, enable):
+		self.logger.debug(f"called. enable={enable}")
+		GPIO.setup(gpio_nightly, GPIO.OUT)
+		GPIO.output(gpio_nightly, GPIO.HIGH if enable is True else GPIO.LOW)
+		return True
