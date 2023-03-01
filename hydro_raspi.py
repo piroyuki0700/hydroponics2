@@ -291,7 +291,7 @@ class CHydroRaspiController():
 		return float_sw == GPIO.LOW
 
 	# サブタンクの水終了コールバック
-	def subpump_callback(self, channel):
+	def subpump_callback(self, channel=0):
 		self.logger.warning(f"cancel subpump {channel}")
 		if channel == gpio_float_sub:
 			available = self.subpump_available()
@@ -301,6 +301,8 @@ class CHydroRaspiController():
 			full = self.check_float_upper()
 			if full:
 				self.event_subpump.set()
+		elif channel == 0:
+			self.event_subpump.set()
 		
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
