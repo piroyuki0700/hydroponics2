@@ -216,7 +216,9 @@ class CHydroDatabaseManager():
 		if data['trig'] == "level":
 			result = f"{data['refilled_at']}({data['on_seconds']} sec) {data['level_before']}%→{data['level_after']}%"
 		else:
-			result = f"{data['refilled_at']}({data['on_seconds']} sec) 上:{data['upper']} 下:{data['lower']}"
+			upper = 'o' if data['upper'] == 1 else 'x'
+			lower = 'o' if data['lower'] == 1 else 'x'
+			result = f"{data['refilled_at']}({data['on_seconds']} sec) 上:{upper} 下:{lower}"
 		return result
 
 	def get_latest_refill_record(self):

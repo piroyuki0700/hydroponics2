@@ -254,12 +254,12 @@ class CHydroRaspiController():
 	def check_float_upper(self):
 		self.logger.debug("called")
 		float_sw = GPIO.input(gpio_float_upper)
-		return float_sw == GPIO.HIGH
+		return float_sw == GPIO.LOW
 
 	def check_float_lower(self):
 		self.logger.debug("called")
-		float_sw = GPIO.input(gpio_float_sub)
-		return float_sw == GPIO.HIGH
+		float_sw = GPIO.input(gpio_float_lower)
+		return float_sw == GPIO.LOW
 
 	# LED ON/OFF
 	def set_led(self, color, state):
@@ -291,10 +291,17 @@ class CHydroRaspiController():
 		return float_sw == GPIO.LOW
 
 	# サブタンクの水終了コールバック
-	def subpump_callback(self):
-		self.logger.warning("cancel subpump")
-		self.event_subpump.set()
-
+	def subpump_callback(self, channel):
+		self.logger.warning(f"cancel subpump {channel}")
+		if channel == gpio_float_sub:
+			available = self.subpump_available()
+			if not available:
+				self.event_subpump.set()
+		elif channel == gpio_float_upper:
+			full = self.check_float_upper()
+			if full:
+				self.event_subpump.set()
+		
 	# サブタンクからの水補充
 	def subpump_refill(self, min, max):
 		self.logger.debug("called")
@@ -303,15 +310,16 @@ class CHydroRaspiController():
 		# サブタンクの水がなくなった場合
 		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 1000)
 		# メインタンクが満タンになった場合
-		GPIO.add_event_detect(gpio_float_upper, GPIO.RISING, self.subpump_callback, 1000)
+		GPIO.add_event_detect(gpio_float_upper, GPIO.FALLING, self.subpump_callback, 1000)
+		self.logger.debug("add_event_detect")
 
 		start_time = datetime.now()
 		self.logger.debug("start_time: " + start_time.strftime('%Y/%m/%d %H:%M:%S'))
 		self.subpump_switch(True)
 
 		ret = self.event_subpump.wait(max)
-		if ret == True:
-			time.sleep(min) # センサー感知から最短動作させて停止
+#		if ret == True:
+#			time.sleep(min) # センサー感知から最短動作させて停止
 
 		self.subpump_switch(False)
 		end_time = datetime.now()
@@ -319,6 +327,7 @@ class CHydroRaspiController():
 		past = int((end_time - start_time).total_seconds()) + 1
 		GPIO.remove_event_detect(gpio_float_sub)
 		GPIO.remove_event_detect(gpio_float_upper)
+		self.logger.debug("remove_event_detect")
 		self.event_subpump.clear()
 
 		empty = not self.subpump_available()

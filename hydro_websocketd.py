@@ -751,8 +751,8 @@ class CHydroMainController():
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
 
-		data = {'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'), 'on_seconds':  result['past'],
-			'trig': 'switch', 'upper': upper, 'lower': lower}
+		data = {'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'), 'on_seconds':  result['past'], 'trig': 'switch',
+			'upper': 1 if upper is True else 0, 'lower': 1 if lower is True else 0}
 		self.db_manage.insert_refill_record(data)
 
 		data = self.subpump_status_command()
@@ -867,6 +867,8 @@ class CHydroMainController():
 			self.event_stop_timer.set()
 			self.future_subpump.result()
 			ret = True
+		elif self.raspi_ctl.subpump_working:
+			self.raspi_ctl.subpump_callback()
 
 		if request is not None:
 			return self.make_result(ret, "subpump switch off")
