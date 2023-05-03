@@ -198,7 +198,7 @@ class CHydroMainController():
 	def scheduler_start(self):
 		self.logger.info("called ------------------------------")
 
-		if int(self.schedule['schedule_active']):
+		if not int(self.schedule['schedule_active']):
 			self.logger.info("schedule is inactive")
 			self.raspi_ctl.update_led('none')
 			return

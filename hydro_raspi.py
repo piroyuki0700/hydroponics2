@@ -171,7 +171,7 @@ class CHydroRaspiController():
 #			water_level = min(100, max(water_level, 0))
 			water_level = max(water_level, 0)
 			self.logger.debug(f"distance:{distance} water_level:{water_level}")
-			if 0 < water_level:
+			if 0 <= water_level:
 				result = {'distance': float(f"{distance:.1f}"), 'water_level': water_level}
 
 		return result
