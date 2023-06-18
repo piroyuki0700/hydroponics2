@@ -4,17 +4,13 @@
 #
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from json.tool import main
 import websockets
 import threading
-import time
 from datetime import datetime
 from datetime import timedelta
 import json
 import twitter
 import requests
-import sys
-import glob
 import subprocess
 import os
 import shutil
@@ -41,6 +37,8 @@ TMP_PICTURE_DIR = 'tmp_picture'
 REFILL_TRIGGER_NONE = 0
 REFILL_TRIGGER_SWITCH = 1
 REFILL_TRIGGER_LEVEL = 2
+
+SENSOR_ERROR_COUNT_LIMIT = 10
 
 class CHydroSwitcher():
 	logger = None
@@ -465,6 +463,7 @@ class CHydroMainController():
 			message += f"水位 {report['water_level']}％ {report['distance']}cm ({symbol[report['water_level_status']]})、"
 		else:
 			message += "水位 －、"
+			self.sensor_error('water_level')
 		if 'tds_level' in report:
 			message += f"濃度 EC{report['tds_level']}({symbol[report['tds_level_status']]})、"
 		else:
@@ -507,6 +506,11 @@ class CHydroMainController():
 		self.websocketd.broadcast(report)
 		if 'water_level' in report:
 			self.prev_level = report['water_level']
+
+	def sensor_error(self, sensor):
+		over_limit = self.db_manage.countup_sensor_error(sensor, SENSOR_ERROR_COUNT_LIMIT)
+		if over_limit:
+			self.line_notify(f"{sensor}センサー故障？{SENSOR_ERROR_COUNT_LIMIT}回連続計測失敗")
 
 	def trigger_stop(self):
 		self.logger.debug("called")

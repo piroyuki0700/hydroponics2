@@ -289,6 +289,18 @@ class CHydroDatabaseManager():
 	def insert_refill_record(self, data):
 		self.logger.debug("called")
 		return self.insert("refill_record", data)
+	
+	def countup_sensor_error(self, sensor, limit):
+		self.logger.debug("called")
+		over_limit = False
+		data = self.getone("sensor_error")
+		data[sensor] += 1
+		if data[sensor] == limit:
+			data[sensor] = 0
+			over_limit = True
+		self.updateone("sensor_error", data)
+		return over_limit
+
 #
 # テスト用
 #
