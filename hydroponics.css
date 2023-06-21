@@ -130,6 +130,11 @@ div.content_main {
   height: 90%;
 }
 
+div.content_half_height {
+  width: 100%;
+  height: 50%;
+}
+
 div.content_control {
   width: 60%;
   height: 100%;
@@ -183,11 +188,9 @@ div.logo_high {
   background-color: green;
 }
 
-/*
-div {
-  border: solid blue 1px;
+.debug_border2 {
+  border: solid blue 2px;
 }
-*/
 
 .lightgray {
   background-color: LightGray;

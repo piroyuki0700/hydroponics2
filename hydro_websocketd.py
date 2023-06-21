@@ -17,8 +17,8 @@ import shutil
 import logging
 import logging.handlers
 
-from hydro_raspi import CHydroRaspiController
-#from hydro_raspi_dummy import CHydroRaspiController
+#from hydro_raspi import CHydroRaspiController
+from hydro_raspi_dummy import CHydroRaspiController
 from hydro_db_manage import CHydroDatabaseManager
 
 MINUTE_START = 0

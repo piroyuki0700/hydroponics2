@@ -213,12 +213,11 @@ class CHydroDatabaseManager():
 		return self.getlatest('report')
 
 	def make_refill_record_string(self, data):
-		if data['trig'] == "level":
-			result = f"{data['refilled_at']}({data['on_seconds']} sec) {data['level_before']}%→{data['level_after']}%"
-		else:
-			upper = 'o' if data['upper'] == 1 else 'x'
-			lower = 'o' if data['lower'] == 1 else 'x'
-			result = f"{data['refilled_at']}({data['on_seconds']} sec) 上:{upper} 下:{lower}"
+		before = 'ー％' if data['level_before'] == None else f"{data['level_before']}％"
+		after = 'ー％' if data['level_after'] == None else f"{data['level_after']}％"
+		upper = '○' if data['upper'] == 1 else '×'
+		lower = '○' if data['lower'] == 1 else '×'
+		result = f"{data['refilled_at']}({data['on_seconds']} sec) {data['trig']} 上:{upper} 下:{lower} {before}→{after}"
 		return result
 
 	def get_latest_refill_record(self):
