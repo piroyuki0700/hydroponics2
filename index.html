@@ -250,25 +250,41 @@
     <div id="pane_pump" class="tab-pane content_full">
       <div class="content_top bg-dark"></div>
       <div class="content_main">
-        <div class="content_control">
-          <i class="fa fa-refresh text-secondary m-2"> 循環</i>
-          <div class="ml-2">
-            オート動作<br/>
-            <button class="btn btn-primary command_button mx-3" onclick="pumpButtonClick('auto_start')">開始</button>
-            <button class="btn btn-danger command_button" onclick="pumpButtonClick('auto_stop')">停止</button>
-            <br/>
-            マニュアル動作<br/>
-            <button class="btn btn-primary command_button mx-3" onclick="pumpButtonClick('manual_start', -1)">連続</button>
-            <button class="btn btn-danger command_button" onclick="pumpButtonClick('manual_stop')">停止</button><br/>
-            <button class="btn btn-secondary command_button ml-3" onclick="pumpButtonClick('manual_start', 10)">10秒</button>
-            <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 30)">30秒</button>
-            <button class="btn btn-secondary command_button ml-3" onclick="pumpButtonClick('manual_start', 60)">１分</button>
-            <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 300)">５分</button>
-            <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 600)">10分</button>
-            <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 1200)">20分</button>
+        <div class="content_half_height">
+          <div class="content_control">
+            <i class="fa fa-refresh text-secondary m-2"> 循環</i>
+            <div class="ml-2">
+              オート動作<br/>
+              <button class="btn btn-primary command_button mx-3" onclick="pumpButtonClick('auto_start')">開始</button>
+              <button class="btn btn-danger command_button" onclick="pumpButtonClick('auto_stop')">停止</button>
+              <br/>
+              マニュアル動作<br/>
+              <button class="btn btn-primary command_button mx-3" onclick="pumpButtonClick('manual_start', -1)">連続</button>
+              <button class="btn btn-danger command_button" onclick="pumpButtonClick('manual_stop')">停止</button><br/>
+              <button class="btn btn-secondary command_button ml-3" onclick="pumpButtonClick('manual_start', 10)">10秒</button>
+              <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 30)">30秒</button>
+              <button class="btn btn-secondary command_button ml-3" onclick="pumpButtonClick('manual_start', 60)">１分</button>
+              <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 300)">５分</button>
+              <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 600)">10分</button>
+              <button class="btn btn-secondary command_button" onclick="pumpButtonClick('manual_start', 1200)">20分</button>
+            </div>
           </div>
+          <div class="content_info">
+            <div class="content_countdown mt-3">
+              <div id="pump_working">
+                <i class="fa fa-refresh fa-spin text-primary"></i>
+              </div>
+              <div id="pump_stop">
+                <i class="fa fa-refresh text-secondary"></i>
+              </div>
+              <div id="pump_countdown">停止</div>
+            </div>
+            <div id="pump_info">動作モード</div>
+          </div>
+        </div>
+        <div class="content_half_height">
           <i class="fa fa-tint text-secondary m-2 mt-3"> 水の補充</i>
-          <div class="ml-2 bg-light">
+          <div class="ml-2">
             <div class="mb-1">
               水位
               <span class="border rounded p-1"><i id="subpump_working" class="fa fa-refresh text-secondary"></i> <span id="refill_level"></span>％</span>
@@ -282,22 +298,12 @@
             <button class="btn btn-secondary command_button" onclick="subPumpButtonClick('stop')">OFF</button>
             <span class="small">%表示</span>
             <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="level_active" value="1" checked>
-            <div class="small" id="refill_record1"></div>
-            <div class="small" id="refill_record2"></div>
-            <div class="small" id="refill_record3"></div>
-          </div>
-        </div>
-        <div class="content_info">
-          <div class="content_countdown mt-3">
-            <div id="pump_working">
-              <i class="fa fa-refresh fa-spin text-primary"></i>
+            <div class="bg-light">
+              <div class="small" id="refill_record1"></div>
+              <div class="small" id="refill_record2"></div>
+              <div class="small" id="refill_record3"></div>
             </div>
-            <div id="pump_stop">
-              <i class="fa fa-refresh text-secondary"></i>
-            </div>
-            <div id="pump_countdown">停止</div>
           </div>
-          <div id="pump_info">動作モード</div>
         </div>
       </div>
     </div>

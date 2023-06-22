@@ -142,7 +142,7 @@ class CHydroRaspiController():
 
 	def check_float_lower(self):
 		self.logger.debug("called")
-		return True
+		return False
 
 	# LED ON/OFF
 	def set_led(self, color, state):
