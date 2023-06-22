@@ -730,7 +730,8 @@ class CHydroMainController():
 		else:
 			available = self.raspi_ctl.subpump_available()
 			if available:
-				self.future_subpump = self.executor_subpump.submit(self.subpump_main_switch)
+				level = self.raspi_ctl.measure_water_level()['water_level']
+				self.future_subpump = self.executor_subpump.submit(self.subpump_main_switch, level)
 				message = "水位低下 サブポンプ動作開始"
 			else:
 				message = "## 危険 ## 水位低下、サブタンクの水がありません。"
@@ -738,7 +739,7 @@ class CHydroMainController():
 
 		self.logger.debug(message)
 
-	def subpump_main_switch(self):
+	def subpump_main_switch(self, level_before):
 		self.logger.debug("called")
 
 		self.websocketd.broadcast(self.subpump_status_command(True))
@@ -747,16 +748,18 @@ class CHydroMainController():
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
 
+		level_after = self.raspi_ctl.measure_water_level()['water_level']
 		upper = self.raspi_ctl.check_float_upper()
 		lower = self.raspi_ctl.check_float_lower()
 
-		message += f"水位低下→上:{upper}、下:{lower}"
+		message += f"水位低下→上:{upper} 下:{lower} {level_before}％→{level_after}％"
 		self.logger.debug(message)
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
 
 		data = {'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'), 'on_seconds':  result['past'], 'trig': 'switch',
-			'upper': 1 if upper is True else 0, 'lower': 1 if lower is True else 0}
+			'upper': 1 if upper is True else 0, 'lower': 1 if lower is True else 0,
+			'level_before': level_before, 'level_after': level_after}
 		self.db_manage.insert_refill_record(data)
 
 		data = self.subpump_status_command()
