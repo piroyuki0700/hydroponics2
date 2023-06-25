@@ -215,9 +215,18 @@ class CHydroDatabaseManager():
 	def make_refill_record_string(self, data):
 		before = 'ー' if data['level_before'] == None else f"{data['level_before']}"
 		after = 'ー' if data['level_after'] == None else f"{data['level_after']}"
-		upper = '○' if data['upper'] == 1 else '×'
-		lower = '○' if data['lower'] == 1 else '×'
-		subp = '○' if data['subp'] == 1 else '×'
+		if data['upper'] is None :
+			upper = 'ー'
+		else:
+			upper = '○' if data['upper'] == 1 else '×'
+		if data['lower'] is None:
+			lower = 'ー'
+		else:
+			lower = '○' if data['lower'] == 1 else '×'
+		if data['subp'] is None:
+			subp = 'ー'
+		else:
+			subp = '○' if data['subp'] == 1 else '×'
 		result = f"{data['refilled_at']}({data['on_seconds']} sec) {data['trig']} 上:{upper} 下:{lower} 補{subp} {before}％→{after}％"
 		return result
 
