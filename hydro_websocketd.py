@@ -753,7 +753,7 @@ class CHydroMainController():
 		lower = self.raspi_ctl.check_float_lower()
 		subp = self.raspi_ctl.subpump_available()
 
-		message += f"水位低下→上:{upper} 下:{lower} 補:{subp} {level_before}％→{level_after}％"
+		message += f"水位低下→上:{upper} 下:{lower} 補:{subp} （{level_before}％→{level_after}％）"
 		self.logger.debug(message)
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
