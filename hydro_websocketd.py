@@ -751,14 +751,15 @@ class CHydroMainController():
 		level_after = self.raspi_ctl.measure_water_level()['water_level']
 		upper = self.raspi_ctl.check_float_upper()
 		lower = self.raspi_ctl.check_float_lower()
+		subp = self.raspi_ctl.subpump_available()
 
-		message += f"水位低下→上:{upper} 下:{lower} {level_before}％→{level_after}％"
+		message += f"水位低下→上:{upper} 下:{lower} 補:{subp} {level_before}％→{level_after}％"
 		self.logger.debug(message)
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
 
 		data = {'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'), 'on_seconds':  result['past'], 'trig': 'switch',
-			'upper': 1 if upper is True else 0, 'lower': 1 if lower is True else 0,
+			'upper': 1 if upper is True else 0, 'lower': 1 if lower is True else 0, 'subp': 1 if subp is True else 0,
 			'level_before': level_before, 'level_after': level_after}
 		self.db_manage.insert_refill_record(data)
 
