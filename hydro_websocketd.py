@@ -748,10 +748,10 @@ class CHydroMainController():
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
 
-		level_after = self.raspi_ctl.measure_water_level()['water_level']
 		upper = self.raspi_ctl.check_float_upper()
 		lower = self.raspi_ctl.check_float_lower()
 		subp = self.raspi_ctl.subpump_available()
+		level_after = self.raspi_ctl.measure_water_level()['water_level']
 
 		message += f"水位低下→上:{upper} 下:{lower} 補:{subp} （{level_before}％→{level_after}％）"
 		self.logger.debug(message)

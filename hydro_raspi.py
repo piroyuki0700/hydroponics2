@@ -170,10 +170,10 @@ class CHydroRaspiController():
 			water_level = int((SENSOR_DISTANCE - distance) * 100 / WATER_LEVEL_FULL)
 #			water_level = min(100, max(water_level, 0))
 			water_level = max(water_level, 0)
-			self.logger.debug(f"distance:{distance} water_level:{water_level}")
 			if 0 <= water_level:
 				result = {'distance': float(f"{distance:.1f}"), 'water_level': water_level}
 
+		self.logger.debug(f"distance:{distance} water_level:{water_level}")
 		return result
 
 	def measure_tds(self, temperature):
