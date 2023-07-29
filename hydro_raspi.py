@@ -310,9 +310,9 @@ class CHydroRaspiController():
 		self.event_subpump.clear()
 
 		# サブタンクの水がなくなった場合
-		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 1000)
+		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 2000)
 		# メインタンクが満タンになった場合
-		GPIO.add_event_detect(gpio_float_upper, GPIO.FALLING, self.subpump_callback, 1000)
+		GPIO.add_event_detect(gpio_float_upper, GPIO.FALLING, self.subpump_callback, 2000)
 		self.logger.debug("add_event_detect")
 
 		start_time = datetime.now()
