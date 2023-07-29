@@ -221,13 +221,13 @@ class CHydroMainController():
 			else:
 				self.logger.info("next start")
 				next_minute = MINUTE_START
-			self.raspi_ctl.nightly_switch(False)
+#			self.raspi_ctl.nightly_switch(False)
 		else:
 			self.switcher.stop()
 			next_minute = MINUTE_START
 			self.raspi_ctl.update_led('blue')
-			if int(self.schedule['nightly_active']):
-				self.raspi_ctl.nightly_switch(True)
+#			if int(self.schedule['nightly_active']):
+#				self.raspi_ctl.nightly_switch(True)
 
 		self.set_next_timer(next_minute)
 
@@ -256,6 +256,8 @@ class CHydroMainController():
 				self.trigger_stop()
 				next_minute = MINUTE_REFILL
 			elif now.minute == MINUTE_REFILL:
+				if int(self.schedule['nightly_active']):
+					self.raspi_ctl.nightly_switch(False)
 				self.subpump_refill()
 				next_minute = MINUTE_START
 			else:
@@ -449,6 +451,9 @@ class CHydroMainController():
 		message = "【自動送信】"
 		if 'air_temp' in report:
 			message += f"気温 {report['air_temp']}℃({symbol[report['air_temp_status']]})、"
+			if report['air_temp_status'] == 'danger':
+				if int(self.schedule['nightly_active']):
+					self.raspi_ctl.nightly_switch(True)
 		else:
 			message += "気温 －、"
 		if 'humidity' in report:
