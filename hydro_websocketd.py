@@ -9,7 +9,7 @@ import threading
 from datetime import datetime
 from datetime import timedelta
 import json
-import twitter
+import tweepy
 import requests
 import subprocess
 import os
@@ -920,18 +920,23 @@ class CHydroMainController():
 		token = self.db_manage.get_sns_token()
 
 		try:
-			# twitter api
-			api = twitter.Api(token['twitter_api_key'], token['twitter_api_secret_key'],
-				token['twitter_access_token'], token['twitter_access_token_secret'])
-			if filename != None:
-				api.PostUpdate(message, media=filename)
-			else:
-				api.PostUpdate(message)
-			return True
+			consumer_key = token['twitter_api_key']
+			consumer_secret = token['twitter_api_secret_key']
+			access_token = token['twitter_access_token']
+			access_token_secret = token['twitter_access_token_secret']
 
-		except twitter.error.TwitterError as e:
-			self.logger.error(f"Twitter Error: {e}")
-			return False
+			# Authenticate Twitter API
+			auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+			auth.set_access_token(access_token, access_token_secret)
+
+			# Create API object
+			api = tweepy.API(auth)
+			client = tweepy.Client(consumer_key=consumer_key, consumer_secret=consumer_secret,
+				access_token=access_token, access_token_secret=access_token_secret)
+
+			# Attach image and message to tweet
+			media = api. media_upload(filename=filename)
+			client. create_tweet(text=message, media_ids=[media.media_id])
 
 		except Exception as e:
 			self.logger.error(f"Unknown exception: {e}")
