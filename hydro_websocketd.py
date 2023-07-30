@@ -940,6 +940,7 @@ class CHydroMainController():
 			else:
 				media = api.media_upload(filename=filename)
 				client.create_tweet(text=message, media_ids=[media.media_id])
+			return True
 
 		except Exception as e:
 			self.logger.error(f"Unknown exception: {e}")
