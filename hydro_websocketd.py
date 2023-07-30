@@ -935,8 +935,11 @@ class CHydroMainController():
 				access_token=access_token, access_token_secret=access_token_secret)
 
 			# Attach image and message to tweet
-			media = api. media_upload(filename=filename)
-			client. create_tweet(text=message, media_ids=[media.media_id])
+			if filename is None:
+				client.create_tweet(text=message)
+			else:
+				media = api.media_upload(filename=filename)
+				client.create_tweet(text=message, media_ids=[media.media_id])
 
 		except Exception as e:
 			self.logger.error(f"Unknown exception: {e}")
