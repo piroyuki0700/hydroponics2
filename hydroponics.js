@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2023.6.25');
+  $('#version').text('Ver.2023.8.6');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -777,8 +777,8 @@ function debugButtonMeasure(sensor_kind) {
 //
 // デバッグ：サブポンプ動作
 //
-function subPumpButtonClick(request) {
-  data = {'command': 'subpump_' + request}
+function subPumpButtonClick(request, option="none") {
+  data = {'command': 'subpump_' + request, 'option': option}
   data["level_active"] = $('input[name="level_active"]').prop("checked")?"1":"0";
   websocket_send(data);
 }

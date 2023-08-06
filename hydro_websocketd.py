@@ -524,9 +524,9 @@ class CHydroMainController():
 	def subpump_refill(self, request=None):
 		self.logger.debug("called")
 		if self.schedule['refill_trigger'] == REFILL_TRIGGER_SWITCH:
-			self.subpump_trigger_switch()
+			self.subpump_trigger_switch(request['option'])
 		elif self.schedule['refill_trigger'] == REFILL_TRIGGER_LEVEL:
-			self.subpump_trigger_level()
+			self.subpump_trigger_level(request['option'])
 
 	def tmp_report(self, request):
 		loop = asyncio.get_running_loop()
@@ -727,12 +727,15 @@ class CHydroMainController():
 			ret = True
 		return self.make_result(ret, message)
 
-	def subpump_trigger_switch(self):
+	def subpump_trigger_switch(self, option):
 		self.logger.debug("called")
-	
-		if self.raspi_ctl.check_float_lower():
-			message = "水位問題なし"
+		perform_refill = False
+		if option != None and option == "must":
+			perform_refill = not self.raspi_ctl.check_float_upper()
 		else:
+			perform_refill = self.raspi_ctl.check_float_lower()
+
+		if perform_refill:
 			available = self.raspi_ctl.subpump_available()
 			if available:
 				level = self.raspi_ctl.measure_water_level()['water_level']
@@ -741,7 +744,8 @@ class CHydroMainController():
 			else:
 				message = "## 危険 ## 水位低下、サブタンクの水がありません。"
 				self.line_notify(message)
-
+		else:
+			message = "水位問題なし"
 		self.logger.debug(message)
 
 	def subpump_main_switch(self, level_before):
