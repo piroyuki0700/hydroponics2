@@ -733,7 +733,7 @@ class CHydroMainController():
 		if request != None and request['option'] == "must":
 			perform_refill = not self.raspi_ctl.check_float_upper()
 		else:
-			perform_refill = self.raspi_ctl.check_float_lower()
+			perform_refill = not self.raspi_ctl.check_float_lower()
 
 		if perform_refill:
 			available = self.raspi_ctl.subpump_available()
