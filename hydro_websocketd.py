@@ -524,9 +524,9 @@ class CHydroMainController():
 	def subpump_refill(self, request=None):
 		self.logger.debug("called")
 		if self.schedule['refill_trigger'] == REFILL_TRIGGER_SWITCH:
-			self.subpump_trigger_switch(request['option'])
+			self.subpump_trigger_switch(request)
 		elif self.schedule['refill_trigger'] == REFILL_TRIGGER_LEVEL:
-			self.subpump_trigger_level(request['option'])
+			self.subpump_trigger_level()
 
 	def tmp_report(self, request):
 		loop = asyncio.get_running_loop()
@@ -727,10 +727,10 @@ class CHydroMainController():
 			ret = True
 		return self.make_result(ret, message)
 
-	def subpump_trigger_switch(self, option):
+	def subpump_trigger_switch(self, request):
 		self.logger.debug("called")
 		perform_refill = False
-		if option != None and option == "must":
+		if request != None and request['option'] == "must":
 			perform_refill = not self.raspi_ctl.check_float_upper()
 		else:
 			perform_refill = self.raspi_ctl.check_float_lower()
