@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2023.8.6');
+  $('#version').text('Ver.2023.8.17');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -784,26 +784,11 @@ function subPumpButtonClick(request, option="none") {
 }
 
 //
-// デバッグ：定時動作テスト
+// デバッグ：汎用動作テスト
 //
-function debugButtonReport() {
-  websocket_send({'command': 'make_report'});
+function debugButtonExec(debug_request="debug_echo", option="none") {
+  websocket_send({'command': debug_request, 'option': option});
 }
-
-//
-// デバッグ：Tweet動作テスト
-//
-function debugButtonTweet() {
-  websocket_send({'command': 'test_tweet'});
-}
-
-//
-// デバッグ：Line動作テスト
-//
-function debugButtonLine() {
-  websocket_send({'command': 'test_line'});
-}
-
 //
 // デバッグ：時間区分の変更
 //

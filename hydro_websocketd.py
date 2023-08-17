@@ -163,7 +163,9 @@ class CHydroMainController():
 			'make_report'      : self.make_report,
 			'test_tweet'       : self.test_tweet,
 			'test_line'        : self.test_line,
+			'test_fan'         : self.test_fan,
 			'debug_time_span'  : self.debug_time_span,
+			'debug_echo'       : self.debug_echo,
 		}
 
 	def __del__(self):
@@ -976,6 +978,12 @@ class CHydroMainController():
 	def test_line(self, request):
 		message = self.line_notify("websocketサーバーからのlineテスト")
 		return self.make_result(True, message)
+	
+	def test_fan(self, request):
+		control = request['option']
+		message = f"扇風機スイッチ:{control}"
+		self.raspi_ctl.nightly_switch(True if control=="on" else False)
+		return self.make_result(True, message)
 
 	def debug_time_span(self, request):
 		global MINUTE_START
@@ -989,6 +997,9 @@ class CHydroMainController():
 		message = f"changed time span to {MINUTE_START}-{MINUTE_STOP}-{MINUTE_REFILL}"
 		self.logger.debug(message)
 		return self.make_result(True, message)
+	
+	def debug_echo(self, request):
+		return self.make_result(True, "echo from web socket server.")
 
 class CHydroWebsocketd:
 	logger = None
