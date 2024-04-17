@@ -5,9 +5,10 @@ After=hydro_httpd.service mysql.service
 [Service]
 Type=simple
 WorkingDirectory=/home/pi/work/hydroponics2/
-ExecStart=/home/pi/work/hydroponics2/hydro_websocketd.py
-User=pi
-Group=pi
+ExecStart=/home/pi/.venv/bin/python3 /home/pi/work/hydroponics2/hydro_websocketd.py
+ExecStop=/home/pi/.venv/bin/python3 /home/pi/work/hydroponics2/hydro_websocketd.py stop
+#User=pi
+#Group=pi
 
 [Install]
 WantedBy=multi-user.target

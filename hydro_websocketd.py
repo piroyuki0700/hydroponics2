@@ -16,9 +16,10 @@ import os
 import shutil
 import logging
 import logging.handlers
+import sys
 
-#from hydro_raspi import CHydroRaspiController
-from hydro_raspi_dummy import CHydroRaspiController
+from hydro_raspi import CHydroRaspiController
+#from hydro_raspi_dummy import CHydroRaspiController
 from hydro_db_manage import CHydroDatabaseManager
 
 MINUTE_START = 0
@@ -222,6 +223,12 @@ class CHydroMainController():
 				self.logger.info("next start")
 				next_minute = MINUTE_START
 			self.raspi_ctl.nightly_switch(False)
+			report = self.db_manage.get_latest_report()
+			if len(report):
+				status = self.evaluate(report)
+				self.raspi_ctl.update_led(status['total_status'])
+			else:
+				self.raspi_ctl.update_led('white')
 		else:
 			self.switcher.stop()
 			next_minute = MINUTE_START
@@ -315,6 +322,7 @@ class CHydroMainController():
 
 		self.subpump_stop()
 		self.scheduler_stop()
+		self.raspi_ctl.update_led('none')
 
 	def scheduler_stop(self):
 		self.logger.info("called")
@@ -476,12 +484,7 @@ class CHydroMainController():
 		self.logger.debug(message)
 
 		# select led color from total status
-		led_color = "green"
-		if report['total_status'] == 'danger':
-			led_color = 'red'
-		elif report['total_status'] == 'warning':
-			led_color = 'yellow'
-		self.raspi_ctl.update_led(led_color)
+		self.raspi_ctl.update_led(status['total_status'])
 
 		# tweet when it is a report time.
 		if int(self.schedule['notify_active']) and self.schedule['notify_time'] == now.hour:
@@ -539,16 +542,20 @@ class CHydroMainController():
 
 	def evaluate(self, report):
 		self.logger.debug("called")
-		status = {'brightness_status': 'success'}
+		status = {}
 		danger = False
 		warning = False
-		limit = self.db_manage.get_sensor_limit()
+		success = False
 
+		if report['brightness'] is not None:
+			status['brightness_status'] = 'success'
+		limit = self.db_manage.get_sensor_limit()
 		items = ['air_temp', 'humidity', 'water_temp', 'water_level', 'tds_level']
 		for item in items:
 			if report[item] is None:
 				del report[item]
 				continue
+			success = True
 
 			vlow = f"{item}_vlow"
 			if (vlow in limit):
@@ -576,13 +583,14 @@ class CHydroMainController():
 					continue
 			status[f"{item}_status"] = 'success'
 
-		if danger == True:
+		if danger is True:
 			status['total_status'] = 'danger'
-		elif warning == True:
+		elif warning is True:
 			status['total_status'] = 'warning'
-		else:
+		elif success is True:
 			status['total_status'] = 'success'
-
+		else:
+			status['total_status'] = 'none'
 		return status
 
 	def tmp_picture(self, request):
@@ -707,10 +715,8 @@ class CHydroMainController():
 			self.manual_timer = None
 
 	def set_led(self, request):
-		ret = self.raspi_ctl.set_led(request['color'], request['state'])
-		return self.make_result(ret, f"{request['color']} led tuned {request['state']}")
-#		ret = self.raspi_ctl.update_led(request['color'])
-#		return self.make_result(ret, f"{request['color']} led is selected." )
+		ret = self.raspi_ctl.update_led(request['color'])
+		return self.make_result(ret, f"led is changed to {request['color']}." )
 
 	def measure_sensor(self, request):
 		value = self.raspi_ctl.measure_sensor(request['sensor_kind'])
@@ -1056,11 +1062,8 @@ def setup_logger(name, logfile):
 
 	return logger
 
-# プログラムスタート
-if __name__ == '__main__':
-	logger = setup_logger('hydro_websocketd', 'hydro_webs_log.txt')
-
-	logger.info("server start")
+def websocketd_start(logger):
+	logger.info("##### server start #####")
 	main_ctl = CHydroMainController(logger)
 	main_ctl.start()
 
@@ -1074,5 +1077,17 @@ if __name__ == '__main__':
 	finally:
 		main_ctl.stop()
 		del main_ctl
-		logger.info("server end.")
+		logger.info("##### server end(1) #####")
 
+# プログラムスタート
+if __name__ == '__main__':
+	logger = setup_logger('hydro_websocketd', 'hydro_webs_log.txt')
+
+	if len(sys.argv) > 1 and sys.argv[1] == 'stop':
+		main_ctl = CHydroMainController(logger)
+		main_ctl.stop()
+		logger.info("##### server end(2) #####")
+	else:
+		websocketd_start(logger)
+
+# end.
