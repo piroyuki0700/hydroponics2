@@ -131,4 +131,6 @@ dmypy.json
 # my setting
 log/
 txt/
+picture/*.jpg
+tmp_picture/*.jpgtxt/
 

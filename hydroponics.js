@@ -776,33 +776,18 @@ function debugButtonMeasure(sensor_kind) {
 //
 // デバッグ：サブポンプ動作
 //
-function subPumpButtonClick(request) {
-  data = {'command': 'subpump_' + request}
+function subPumpButtonClick(request, option="none") {
+  data = {'command': 'subpump_' + request, 'option': option}
   data["level_active"] = $('input[name="level_active"]').prop("checked")?"1":"0";
   websocket_send(data);
 }
 
 //
-// デバッグ：定時動作テスト
+// デバッグ：汎用動作テスト
 //
-function debugButtonReport() {
-  websocket_send({'command': 'make_report'});
+function debugButtonExec(debug_request="debug_echo", option="none") {
+  websocket_send({'command': debug_request, 'option': option});
 }
-
-//
-// デバッグ：Tweet動作テスト
-//
-function debugButtonTweet(tweet_kind) {
-  websocket_send({'command': 'test_tweet', 'tweet_king': tweet_kind});
-}
-
-//
-// デバッグ：Line動作テスト
-//
-function debugButtonLine() {
-  websocket_send({'command': 'test_line'});
-}
-
 //
 // デバッグ：時間区分の変更
 //
