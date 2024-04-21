@@ -194,6 +194,8 @@ class CHydroRaspiController():
 		measured = False
 		for i in range(RETRY_TDS_MAX):
 			value = bus.read_byte(adda_address)
+			time.sleep(0.1)
+			value = bus.read_byte(adda_address)     # 2回読まないとあまり変化しない
 			self.logger.debug(f"{i}: {value}")
 			if 0 < value and value < 100:
 				measured = True
@@ -273,17 +275,17 @@ class CHydroRaspiController():
 		self.logger.debug(f"called. color={color}")
 		pixels = neopixel.NeoPixel(gpio_led, 1)
 		if color == 'blue':
-			pixels[0] = (0, 0, 64)
+			pixels[0] = (0, 0, 50)
 		elif color == 'green' or color == 'success':
-			pixels[0] = (64, 0, 0)
+			pixels[0] = (50, 0, 0)
 		elif color == 'yellow' or color == 'warning':
-			pixels[0] = (50, 50, 0)
+			pixels[0] = (32, 32, 0)
 		elif color == 'red' or color == 'danger':
-			pixels[0] = (0, 64, 0)
+			pixels[0] = (0, 50, 0)
 		elif color == 'cyan':
-			pixels[0] = (50, 0, 50)
+			pixels[0] = (32, 0, 32)
 		elif color == 'magenta':
-			pixels[0] = (0, 50, 50)
+			pixels[0] = (0, 32, 32)
 		elif color == 'white':
 			pixels[0] = (20, 20, 20)
 		else:
