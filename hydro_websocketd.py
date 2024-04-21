@@ -9,7 +9,7 @@ import threading
 from datetime import datetime
 from datetime import timedelta
 import json
-import twitter
+import tweepy
 import requests
 import subprocess
 import os
@@ -163,7 +163,9 @@ class CHydroMainController():
 			'make_report'      : self.make_report,
 			'test_tweet'       : self.test_tweet,
 			'test_line'        : self.test_line,
+			'test_fan'         : self.test_fan,
 			'debug_time_span'  : self.debug_time_span,
+			'debug_echo'       : self.debug_echo,
 		}
 
 	def __del__(self):
@@ -221,13 +223,13 @@ class CHydroMainController():
 			else:
 				self.logger.info("next start")
 				next_minute = MINUTE_START
-			self.raspi_ctl.nightly_switch(False)
+#			self.raspi_ctl.nightly_switch(False)
 		else:
 			self.switcher.stop()
 			next_minute = MINUTE_START
 			self.raspi_ctl.update_led('blue')
-			if int(self.schedule['nightly_active']):
-				self.raspi_ctl.nightly_switch(True)
+#			if int(self.schedule['nightly_active']):
+#				self.raspi_ctl.nightly_switch(True)
 
 		self.set_next_timer(next_minute)
 
@@ -256,6 +258,8 @@ class CHydroMainController():
 				self.trigger_stop()
 				next_minute = MINUTE_REFILL
 			elif now.minute == MINUTE_REFILL:
+				if int(self.schedule['nightly_active']):
+					self.raspi_ctl.nightly_switch(False)
 				self.subpump_refill()
 				next_minute = MINUTE_START
 			else:
@@ -449,6 +453,9 @@ class CHydroMainController():
 		message = "【自動送信】"
 		if 'air_temp' in report:
 			message += f"気温 {report['air_temp']}℃({symbol[report['air_temp_status']]})、"
+			if report['air_temp_status'] == 'danger':
+				if int(self.schedule['nightly_active']):
+					self.raspi_ctl.nightly_switch(True)
 		else:
 			message += "気温 －、"
 		if 'humidity' in report:
@@ -519,7 +526,7 @@ class CHydroMainController():
 	def subpump_refill(self, request=None):
 		self.logger.debug("called")
 		if self.schedule['refill_trigger'] == REFILL_TRIGGER_SWITCH:
-			self.subpump_trigger_switch()
+			self.subpump_trigger_switch(request)
 		elif self.schedule['refill_trigger'] == REFILL_TRIGGER_LEVEL:
 			self.subpump_trigger_level()
 
@@ -722,12 +729,15 @@ class CHydroMainController():
 			ret = True
 		return self.make_result(ret, message)
 
-	def subpump_trigger_switch(self):
+	def subpump_trigger_switch(self, request):
 		self.logger.debug("called")
-	
-		if self.raspi_ctl.check_float_lower():
-			message = "水位問題なし"
+		perform_refill = False
+		if request != None and request['option'] == "must":
+			perform_refill = not self.raspi_ctl.check_float_upper()
 		else:
+			perform_refill = not self.raspi_ctl.check_float_lower()
+
+		if perform_refill:
 			available = self.raspi_ctl.subpump_available()
 			if available:
 				level = self.raspi_ctl.measure_water_level()['water_level']
@@ -736,7 +746,8 @@ class CHydroMainController():
 			else:
 				message = "## 危険 ## 水位低下、サブタンクの水がありません。"
 				self.line_notify(message)
-
+		else:
+			message = "水位問題なし"
 		self.logger.debug(message)
 
 	def subpump_main_switch(self, level_before):
@@ -748,17 +759,18 @@ class CHydroMainController():
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
 
-		level_after = self.raspi_ctl.measure_water_level()['water_level']
 		upper = self.raspi_ctl.check_float_upper()
 		lower = self.raspi_ctl.check_float_lower()
+		subp = self.raspi_ctl.subpump_available()
+		level_after = self.raspi_ctl.measure_water_level()['water_level']
 
-		message += f"水位低下→上:{upper} 下:{lower} {level_before}％→{level_after}％"
+		message += f"水位低下→上:{upper} 下:{lower} 補:{subp} （{level_before}％→{level_after}％）"
 		self.logger.debug(message)
 		self.line_notify(message)
 		self.websocketd.broadcast(self.make_result(True, message))
 
 		data = {'refilled_at': datetime.now().strftime('%Y/%m/%d %H:%M:%S'), 'on_seconds':  result['past'], 'trig': 'switch',
-			'upper': 1 if upper is True else 0, 'lower': 1 if lower is True else 0,
+			'upper': 1 if upper is True else 0, 'lower': 1 if lower is True else 0, 'subp': 1 if subp is True else 0,
 			'level_before': level_before, 'level_after': level_after}
 		self.db_manage.insert_refill_record(data)
 
@@ -914,18 +926,27 @@ class CHydroMainController():
 		token = self.db_manage.get_sns_token()
 
 		try:
-			# twitter api
-			api = twitter.Api(token['twitter_api_key'], token['twitter_api_secret_key'],
-				token['twitter_access_token'], token['twitter_access_token_secret'])
-			if filename != None:
-				api.PostUpdate(message, media=filename)
-			else:
-				api.PostUpdate(message)
-			return True
+			consumer_key = token['twitter_api_key']
+			consumer_secret = token['twitter_api_secret_key']
+			access_token = token['twitter_access_token']
+			access_token_secret = token['twitter_access_token_secret']
 
-		except twitter.error.TwitterError as e:
-			self.logger.error(f"Twitter Error: {e}")
-			return False
+			# Authenticate Twitter API
+			auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+			auth.set_access_token(access_token, access_token_secret)
+
+			# Create API object
+			api = tweepy.API(auth)
+			client = tweepy.Client(consumer_key=consumer_key, consumer_secret=consumer_secret,
+				access_token=access_token, access_token_secret=access_token_secret)
+
+			# Attach image and message to tweet
+			if filename is None:
+				client.create_tweet(text=message)
+			else:
+				media = api.media_upload(filename=filename)
+				client.create_tweet(text=message, media_ids=[media.media_id])
+			return True
 
 		except Exception as e:
 			self.logger.error(f"Unknown exception: {e}")
@@ -957,6 +978,12 @@ class CHydroMainController():
 	def test_line(self, request):
 		message = self.line_notify("websocketサーバーからのlineテスト")
 		return self.make_result(True, message)
+	
+	def test_fan(self, request):
+		control = request['option']
+		message = f"扇風機スイッチ:{control}"
+		self.raspi_ctl.nightly_switch(True if control=="on" else False)
+		return self.make_result(True, message)
 
 	def debug_time_span(self, request):
 		global MINUTE_START
@@ -970,6 +997,9 @@ class CHydroMainController():
 		message = f"changed time span to {MINUTE_START}-{MINUTE_STOP}-{MINUTE_REFILL}"
 		self.logger.debug(message)
 		return self.make_result(True, message)
+	
+	def debug_echo(self, request):
+		return self.make_result(True, "echo from web socket server.")
 
 class CHydroWebsocketd:
 	logger = None

@@ -170,10 +170,10 @@ class CHydroRaspiController():
 			water_level = int((SENSOR_DISTANCE - distance) * 100 / WATER_LEVEL_FULL)
 #			water_level = min(100, max(water_level, 0))
 			water_level = max(water_level, 0)
-			self.logger.debug(f"distance:{distance} water_level:{water_level}")
 			if 0 <= water_level:
 				result = {'distance': float(f"{distance:.1f}"), 'water_level': water_level}
 
+		self.logger.debug(f"distance:{distance} water_level:{water_level}")
 		return result
 
 	def measure_tds(self, temperature):
@@ -310,9 +310,9 @@ class CHydroRaspiController():
 		self.event_subpump.clear()
 
 		# サブタンクの水がなくなった場合
-		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 1000)
+		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 2000)
 		# メインタンクが満タンになった場合
-		GPIO.add_event_detect(gpio_float_upper, GPIO.FALLING, self.subpump_callback, 1000)
+		GPIO.add_event_detect(gpio_float_upper, GPIO.FALLING, self.subpump_callback, 2000)
 		self.logger.debug("add_event_detect")
 
 		start_time = datetime.now()
