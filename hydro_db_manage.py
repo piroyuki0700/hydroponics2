@@ -154,10 +154,11 @@ class CHydroDatabaseManager():
 				#self.logger.debug(sql)
 	
 				cur.execute(sql)
+				lastrowid = cur.lastrowid
 				cur.close()
 				self.conn.commit()
 	
-				return cur.lastrowid
+				return lastrowid
 	
 			except mariadb.Error as e:
 				self.logger.error(f"mariadb.Error: {e}")

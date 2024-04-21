@@ -284,8 +284,8 @@ class CHydroRaspiController():
 			pixels[0] = (50, 0, 50)
 		elif color == 'magenta':
 			pixels[0] = (0, 50, 50)
-		elif color == 'white' or color == 'none':
-			pixels[0] = (50, 50, 50)
+		elif color == 'white':
+			pixels[0] = (20, 20, 20)
 		else:
 			pixels[0] = (0, 0, 0)
 		return True

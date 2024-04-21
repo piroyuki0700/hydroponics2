@@ -792,8 +792,8 @@ function debugButtonReport() {
 //
 // デバッグ：Tweet動作テスト
 //
-function debugButtonTweet() {
-  websocket_send({'command': 'test_tweet'});
+function debugButtonTweet(tweet_kind) {
+  websocket_send({'command': 'test_tweet', 'tweet_king': tweet_kind});
 }
 
 //

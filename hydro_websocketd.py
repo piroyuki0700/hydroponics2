@@ -9,7 +9,7 @@ import threading
 from datetime import datetime
 from datetime import timedelta
 import json
-import twitter
+import tweepy
 import requests
 import subprocess
 import os
@@ -17,6 +17,7 @@ import shutil
 import logging
 import logging.handlers
 import sys
+import signal
 
 from hydro_raspi import CHydroRaspiController
 #from hydro_raspi_dummy import CHydroRaspiController
@@ -613,7 +614,7 @@ class CHydroMainController():
 		name = f"picture_{nowstr}.jpg"
 		path = f"{key}/{name}"
 		cmd = f'fswebcam -r 1280x720 --no-banner {path}'
-		self.logger.debug(cmd)
+		#self.logger.debug(cmd)
 
 		result = {'command': key, f'{key}_name': name, f'{key}_path': path, f'{key}_taken': now.strftime('%Y/%m/%d %H:%M:%S')}
 		ret = subprocess.run(cmd, shell=True)
@@ -630,7 +631,7 @@ class CHydroMainController():
 			shutil.move(request['tmp_picture_path'], SAVE_PICTURE_DIR)
 			no = self.db_manage.insert_picture({'filename': request['tmp_picture_name'], 'taken': request['tmp_picture_taken']})
 			ret = (no > 0)
-			message = "tmp picture is saved." if ret else "failed to save tmp picture."
+			message = f"tmp picture[{no}] is saved." if ret else f"failed to save tmp picture[{no}]."
 		else:
 			ret = False
 			message = "tmp picture is not found."
@@ -918,20 +919,29 @@ class CHydroMainController():
 	def tweet(self, message, filename=None):
 		self.logger.info("called")
 		token = self.db_manage.get_sns_token()
+		consumer_key = token['twitter_api_key']
+		consumer_secret = token['twitter_api_secret_key']
+		access_token = token['twitter_access_token']
+		access_token_secret = token['twitter_access_token_secret']
 
 		try:
-			# twitter api
-			api = twitter.Api(token['twitter_api_key'], token['twitter_api_secret_key'],
-				token['twitter_access_token'], token['twitter_access_token_secret'])
-			if filename != None:
-				api.PostUpdate(message, media=filename)
-			else:
-				api.PostUpdate(message)
-			return True
+			client = tweepy.Client(
+				consumer_key = consumer_key,
+				consumer_secret = consumer_secret,
+				access_token = access_token,
+				access_token_secret = access_token_secret)
 
-		except twitter.error.TwitterError as e:
-			self.logger.error(f"Twitter Error: {e}")
-			return False
+			if filename is None:
+				self.logger.info("create_tweet without media")
+				client.create_tweet(text = message) 
+			else:
+				self.logger.info("create_tweet with media")
+				auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+				auth.set_access_token(access_token, access_token_secret)
+				api = tweepy.API(auth)
+				media = api.media_upload(filename=filename)
+				client.create_tweet(text = message, media_ids = [media.media_id]) 
+			return True
 
 		except Exception as e:
 			self.logger.error(f"Unknown exception: {e}")
@@ -957,7 +967,12 @@ class CHydroMainController():
 			return False
 
 	def test_tweet(self, request):
-		ret = self.tweet("websocketサーバーからのtweetテスト")
+		filename = None
+		if (request['tweet_king'] == 'pic'):
+			data = self.db_manage.get_latest_picture(SAVE_PICTURE_DIR)
+			filename = data['picture_path']
+		now = datetime.now()
+		ret = self.tweet("websocketサーバーからのtweetテスト : " + now.strftime('%Y/%m/%d %H:%M:%S'), filename)
 		return self.make_result(ret, "tweet test")
 
 	def test_line(self, request):
@@ -1062,7 +1077,17 @@ def setup_logger(name, logfile):
 
 	return logger
 
-def websocketd_start(logger):
+class TerminatedExecption(Exception):
+	pass
+
+def raise_exception(*_):
+	raise TerminatedExecption()
+
+# プログラムスタート
+if __name__ == '__main__':
+	signal.signal(signal.SIGTERM, raise_exception)
+	logger = setup_logger('hydro_websocketd', 'hydro_webs_log.txt')
+
 	logger.info("##### server start #####")
 	main_ctl = CHydroMainController(logger)
 	main_ctl.start()
@@ -1070,24 +1095,20 @@ def websocketd_start(logger):
 	try:
 		logger.info("server run")
 		main_ctl.run_server()
+		logger.info("server halt")
 
 	# Ctrl-Cによるキーボード割り込みで終了
 	except KeyboardInterrupt:
-		logger.info("hydro_server ended. (KeyboardInterrupt)")
+		logger.info("### hydro_server ended. (KeyboardInterrupt)")
+	# systemdのstopコマンドで終了
+	except TerminatedExecption:
+		logger.info("### hydro_server ended. (systemd stop)")
+	except Exception as e:
+		import traceback
+		traceback.print_exc()
 	finally:
 		main_ctl.stop()
 		del main_ctl
-		logger.info("##### server end(1) #####")
-
-# プログラムスタート
-if __name__ == '__main__':
-	logger = setup_logger('hydro_websocketd', 'hydro_webs_log.txt')
-
-	if len(sys.argv) > 1 and sys.argv[1] == 'stop':
-		main_ctl = CHydroMainController(logger)
-		main_ctl.stop()
-		logger.info("##### server end(2) #####")
-	else:
-		websocketd_start(logger)
+		logger.info("##### server end #####")
 
 # end.
