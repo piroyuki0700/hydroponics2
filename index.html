@@ -418,16 +418,17 @@
         <i class="fa fa-bug text-secondary m-2"> デバッグ用</i>
         <div class="mt-1">
           <span>
-            <span class="small">websocket</span>
+            <span class="small">Socket:</span>
             <button onclick="reconnectButtonClick()" class="btn btn-secondary command_button">接続</button>
             <button onclick="disconnectButtonClick()" class="btn btn-secondary command_button">切断</button>
           </span>
-          <span>
-            <button onclick="ledButtonClick('blue')" class="btn btn-primary command_button ml-3">blue</button>
+          <span class="ml-3">
+            <span class="small">LED:</span>
+            <button onclick="ledButtonClick('blue')" class="btn btn-primary command_button">blue</button>
             <button onclick="ledButtonClick('green')" class="btn btn-success command_button">green</button>
             <button onclick="ledButtonClick('yellow')" class="btn btn-warning command_button">yellow</button>
             <button onclick="ledButtonClick('red')" class="btn btn-danger command_button">red</button>
-            <button onclick="ledButtonClick('white')" class="btn btn-light command_button">white</button>
+            <button onclick="ledButtonClick('white')" class="btn btn-light command_button border-dark">white</button>
             <button onclick="ledButtonClick('none')" class="btn btn-secondary command_button">OFF</button>
           </span>
         </div>
@@ -441,13 +442,20 @@
           </span>
           <span class="ml-3">
             <span class="small">Test:</span>
-            <button onclick="debugButtonExec('make_report')" class="btn btn-secondary command_button">定時</button>
+            <button onclick="debugButtonExec('make_report')" class="btn btn-secondary command_button">定時処理</button>
             <button onclick="debugButtonExec('test_tweet','txt')" class="btn btn-secondary command_button">Tweet</button>
             <button onclick="debugButtonExec('test_tweet','pic')" class="btn btn-secondary command_button">Tweet(pic)</button>
             <button onclick="debugButtonExec('test_line')" class="btn btn-secondary command_button">Line</button>
-            <span class="small">Fan:</span>
-            <button onclick="debugButtonExec('test_fan', 'on')" class="btn btn-secondary command_button">On</button>
-            <button onclick="debugButtonExec('test_fan', 'off')" class="btn btn-secondary command_button">Off</button>
+          </span>
+        </div>
+        <div class="mt-1">
+          <span></span>
+            <span class="small">Circl:</span>
+            <button onclick="debugButtonExec('test_ssr1', 'on')" class="btn btn-secondary command_button">On</button>
+            <button onclick="debugButtonExec('test_ssr1', 'off')" class="btn btn-secondary command_button">Off</button>
+            <span class="small ml-3">Night:</span>
+            <button onclick="debugButtonExec('test_ssr2', 'on')" class="btn btn-secondary command_button">On</button>
+            <button onclick="debugButtonExec('test_ssr2', 'off')" class="btn btn-secondary command_button">Off</button> 
           </span>
         </div>
         <textarea class="content_message border border-dark" id="debug_message"></textarea>

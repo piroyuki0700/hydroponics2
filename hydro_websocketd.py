@@ -165,7 +165,8 @@ class CHydroMainController():
 			'make_report'      : self.make_report,
 			'test_tweet'       : self.test_tweet,
 			'test_line'        : self.test_line,
-			'test_fan'         : self.test_fan,
+			'test_ssr1'        : self.test_ssr1,
+			'test_ssr2'        : self.test_ssr2,
 			'debug_time_span'  : self.debug_time_span,
 			'debug_echo'       : self.debug_echo,
 		}
@@ -225,7 +226,7 @@ class CHydroMainController():
 			else:
 				self.logger.info("next start")
 				next_minute = MINUTE_START
-			self.raspi_ctl.nightly_switch(False)
+
 			report = self.db_manage.get_latest_report()
 			if len(report):
 				status = self.evaluate(report)
@@ -236,8 +237,6 @@ class CHydroMainController():
 			self.switcher.stop()
 			next_minute = MINUTE_START
 			self.raspi_ctl.update_led('blue')
-#			if int(self.schedule['nightly_active']):
-#				self.raspi_ctl.nightly_switch(True)
 
 		self.set_next_timer(next_minute)
 
@@ -266,8 +265,6 @@ class CHydroMainController():
 				self.trigger_stop()
 				next_minute = MINUTE_REFILL
 			elif now.minute == MINUTE_REFILL:
-				if int(self.schedule['nightly_active']):
-					self.raspi_ctl.nightly_switch(False)
 				self.subpump_refill()
 				next_minute = MINUTE_START
 			else:
@@ -305,7 +302,10 @@ class CHydroMainController():
 		if now.hour < self.schedule['time_morning'] or self.schedule['time_night'] <= now.hour:
 			time_span = 'night'
 			activate = False
+			if int(self.schedule['nightly_active']):
+				self.raspi_ctl.nightly_switch(True)
 		else:
+			self.raspi_ctl.nightly_switch(False)
 			if self.schedule['time_evening'] <= now.hour:
 				time_span = 'evening'
 			elif self.schedule['time_noon'] <= now.hour:
@@ -333,6 +333,7 @@ class CHydroMainController():
 		self.logger.info("called")
 		self.switcher.stop()
 		self.raspi_ctl.nightly_switch(False)
+		self.raspi_ctl.circulator_switch(False)
 		if self.schedule_timer != None:
 			self.schedule_timer.cancel()
 			del self.schedule_timer
@@ -462,9 +463,9 @@ class CHydroMainController():
 		message = "【自動送信】"
 		if 'air_temp' in report:
 			message += f"気温 {report['air_temp']}℃({symbol[report['air_temp_status']]})、"
-			if report['air_temp_status'] == 'danger':
-				if int(self.schedule['nightly_active']):
-					self.raspi_ctl.nightly_switch(True)
+			if report['air_temp_status'] == 'danger' or report['air_temp_status'] == 'warning':
+				if int(self.schedule['circulator_active']):
+					self.raspi_ctl.circulator_switch(True)
 		else:
 			message += "気温 －、"
 		if 'humidity' in report:
@@ -991,9 +992,15 @@ class CHydroMainController():
 		message = self.line_notify("websocketサーバーからのlineテスト")
 		return self.make_result(True, message)
 	
-	def test_fan(self, request):
+	def test_ssr1(self, request):
 		control = request['option']
-		message = f"扇風機スイッチ:{control}"
+		message = f"SSR circulator:{control}"
+		self.raspi_ctl.circulator_switch(True if control=="on" else False)
+		return self.make_result(True, message)
+
+	def test_ssr2(self, request):
+		control = request['option']
+		message = f"SSR nightly:{control}"
 		self.raspi_ctl.nightly_switch(True if control=="on" else False)
 		return self.make_result(True, message)
 

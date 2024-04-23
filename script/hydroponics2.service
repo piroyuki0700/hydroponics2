@@ -1,6 +1,7 @@
 [Unit]
 Description=hydroponics websocket server
 After=hydro_httpd.service mysql.service
+Requires=hydro_httpd.service mysql.service
 
 [Service]
 Type=simple

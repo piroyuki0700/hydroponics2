@@ -351,6 +351,13 @@ class CHydroRaspiController():
 		empty = not self.subpump_available()
 		return {'past': past, 'empty': empty}
 
+	# 換気扇スイッチ
+	def circulator_switch(self, enable):
+		self.logger.debug(f"called. enable={enable}")
+		GPIO.setup(gpio_circulator, GPIO.OUT)
+		GPIO.output(gpio_circulator, GPIO.HIGH if enable is True else GPIO.LOW)
+		return True
+
 	# 夜間スイッチ
 	def nightly_switch(self, enable):
 		self.logger.debug(f"called. enable={enable}")
