@@ -132,5 +132,5 @@ dmypy.json
 log/
 txt/
 picture/*.jpg
-tmp_picture/*.jpgtxt/
+tmp_picture/*.jpg
 
