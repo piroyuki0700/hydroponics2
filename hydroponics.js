@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2024.4.23');
+  $('#version').text('Ver.2024.4.29');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ

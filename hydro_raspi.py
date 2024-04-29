@@ -164,6 +164,7 @@ class CHydroRaspiController():
 
 		measured = False
 		for i in range(RETRY_DISTANCE_MAX):
+			water_level = 0
 			distance = self.getSonar()
 			self.logger.debug(f"count:{i}: {distance}")
 			if VALID_DISTANCE_MIN <= distance and distance <= VALID_DISTANCE_MAX:
