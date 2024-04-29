@@ -11,8 +11,8 @@ import threading
 import logging
 import json
 
-#DATABASE_ID = 'hydro2023summer'
-DATABASE_ID = 'hydro2023test'
+#DATABASE_ID = 'hydro2024summer'
+DATABASE_ID = 'hydro2024test'
 
 class CHydroDatabaseManager():
 	logger = None
@@ -154,10 +154,11 @@ class CHydroDatabaseManager():
 				#self.logger.debug(sql)
 	
 				cur.execute(sql)
+				lastrowid = cur.lastrowid
 				cur.close()
 				self.conn.commit()
 	
-				return cur.lastrowid
+				return lastrowid
 	
 			except mariadb.Error as e:
 				self.logger.error(f"mariadb.Error: {e}")

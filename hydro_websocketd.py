@@ -16,9 +16,11 @@ import os
 import shutil
 import logging
 import logging.handlers
+import sys
+import signal
 
-#from hydro_raspi import CHydroRaspiController
-from hydro_raspi_dummy import CHydroRaspiController
+from hydro_raspi import CHydroRaspiController
+#from hydro_raspi_dummy import CHydroRaspiController
 from hydro_db_manage import CHydroDatabaseManager
 
 MINUTE_START = 0
@@ -163,7 +165,8 @@ class CHydroMainController():
 			'make_report'      : self.make_report,
 			'test_tweet'       : self.test_tweet,
 			'test_line'        : self.test_line,
-			'test_fan'         : self.test_fan,
+			'test_ssr1'        : self.test_ssr1,
+			'test_ssr2'        : self.test_ssr2,
 			'debug_time_span'  : self.debug_time_span,
 			'debug_echo'       : self.debug_echo,
 		}
@@ -223,13 +226,17 @@ class CHydroMainController():
 			else:
 				self.logger.info("next start")
 				next_minute = MINUTE_START
-#			self.raspi_ctl.nightly_switch(False)
+
+			report = self.db_manage.get_latest_report()
+			if len(report):
+				status = self.evaluate(report)
+				self.raspi_ctl.update_led(status['total_status'])
+			else:
+				self.raspi_ctl.update_led('white')
 		else:
 			self.switcher.stop()
 			next_minute = MINUTE_START
 			self.raspi_ctl.update_led('blue')
-#			if int(self.schedule['nightly_active']):
-#				self.raspi_ctl.nightly_switch(True)
 
 		self.set_next_timer(next_minute)
 
@@ -258,8 +265,6 @@ class CHydroMainController():
 				self.trigger_stop()
 				next_minute = MINUTE_REFILL
 			elif now.minute == MINUTE_REFILL:
-				if int(self.schedule['nightly_active']):
-					self.raspi_ctl.nightly_switch(False)
 				self.subpump_refill()
 				next_minute = MINUTE_START
 			else:
@@ -297,7 +302,10 @@ class CHydroMainController():
 		if now.hour < self.schedule['time_morning'] or self.schedule['time_night'] <= now.hour:
 			time_span = 'night'
 			activate = False
+			if int(self.schedule['nightly_active']):
+				self.raspi_ctl.nightly_switch(True)
 		else:
+			self.raspi_ctl.nightly_switch(False)
 			if self.schedule['time_evening'] <= now.hour:
 				time_span = 'evening'
 			elif self.schedule['time_noon'] <= now.hour:
@@ -319,11 +327,13 @@ class CHydroMainController():
 
 		self.subpump_stop()
 		self.scheduler_stop()
+		self.raspi_ctl.update_led('none')
 
 	def scheduler_stop(self):
 		self.logger.info("called")
 		self.switcher.stop()
 		self.raspi_ctl.nightly_switch(False)
+		self.raspi_ctl.circulator_switch(False)
 		if self.schedule_timer != None:
 			self.schedule_timer.cancel()
 			del self.schedule_timer
@@ -453,9 +463,9 @@ class CHydroMainController():
 		message = "【自動送信】"
 		if 'air_temp' in report:
 			message += f"気温 {report['air_temp']}℃({symbol[report['air_temp_status']]})、"
-			if report['air_temp_status'] == 'danger':
-				if int(self.schedule['nightly_active']):
-					self.raspi_ctl.nightly_switch(True)
+			if report['air_temp_status'] == 'danger' or report['air_temp_status'] == 'warning':
+				if int(self.schedule['circulator_active']):
+					self.raspi_ctl.circulator_switch(True)
 		else:
 			message += "気温 －、"
 		if 'humidity' in report:
@@ -483,12 +493,7 @@ class CHydroMainController():
 		self.logger.debug(message)
 
 		# select led color from total status
-		led_color = "green"
-		if report['total_status'] == 'danger':
-			led_color = 'red'
-		elif report['total_status'] == 'warning':
-			led_color = 'yellow'
-		self.raspi_ctl.update_led(led_color)
+		self.raspi_ctl.update_led(status['total_status'])
 
 		# tweet when it is a report time.
 		if int(self.schedule['notify_active']) and self.schedule['notify_time'] == now.hour:
@@ -546,16 +551,20 @@ class CHydroMainController():
 
 	def evaluate(self, report):
 		self.logger.debug("called")
-		status = {'brightness_status': 'success'}
+		status = {}
 		danger = False
 		warning = False
-		limit = self.db_manage.get_sensor_limit()
+		success = False
 
+		if report['brightness'] is not None:
+			status['brightness_status'] = 'success'
+		limit = self.db_manage.get_sensor_limit()
 		items = ['air_temp', 'humidity', 'water_temp', 'water_level', 'tds_level']
 		for item in items:
 			if report[item] is None:
 				del report[item]
 				continue
+			success = True
 
 			vlow = f"{item}_vlow"
 			if (vlow in limit):
@@ -583,13 +592,14 @@ class CHydroMainController():
 					continue
 			status[f"{item}_status"] = 'success'
 
-		if danger == True:
+		if danger is True:
 			status['total_status'] = 'danger'
-		elif warning == True:
+		elif warning is True:
 			status['total_status'] = 'warning'
-		else:
+		elif success is True:
 			status['total_status'] = 'success'
-
+		else:
+			status['total_status'] = 'none'
 		return status
 
 	def tmp_picture(self, request):
@@ -612,7 +622,7 @@ class CHydroMainController():
 		name = f"picture_{nowstr}.jpg"
 		path = f"{key}/{name}"
 		cmd = f'fswebcam -r 1280x720 --no-banner {path}'
-		self.logger.debug(cmd)
+		#self.logger.debug(cmd)
 
 		result = {'command': key, f'{key}_name': name, f'{key}_path': path, f'{key}_taken': now.strftime('%Y/%m/%d %H:%M:%S')}
 		ret = subprocess.run(cmd, shell=True)
@@ -629,7 +639,7 @@ class CHydroMainController():
 			shutil.move(request['tmp_picture_path'], SAVE_PICTURE_DIR)
 			no = self.db_manage.insert_picture({'filename': request['tmp_picture_name'], 'taken': request['tmp_picture_taken']})
 			ret = (no > 0)
-			message = "tmp picture is saved." if ret else "failed to save tmp picture."
+			message = f"tmp picture[{no}] is saved." if ret else f"failed to save tmp picture[{no}]."
 		else:
 			ret = False
 			message = "tmp picture is not found."
@@ -714,10 +724,8 @@ class CHydroMainController():
 			self.manual_timer = None
 
 	def set_led(self, request):
-		ret = self.raspi_ctl.set_led(request['color'], request['state'])
-		return self.make_result(ret, f"{request['color']} led tuned {request['state']}")
-#		ret = self.raspi_ctl.update_led(request['color'])
-#		return self.make_result(ret, f"{request['color']} led is selected." )
+		ret = self.raspi_ctl.update_led(request['color'])
+		return self.make_result(ret, f"led is changed to {request['color']}." )
 
 	def measure_sensor(self, request):
 		value = self.raspi_ctl.measure_sensor(request['sensor_kind'])
@@ -924,28 +932,28 @@ class CHydroMainController():
 	def tweet(self, message, filename=None):
 		self.logger.info("called")
 		token = self.db_manage.get_sns_token()
+		consumer_key = token['twitter_api_key']
+		consumer_secret = token['twitter_api_secret_key']
+		access_token = token['twitter_access_token']
+		access_token_secret = token['twitter_access_token_secret']
 
 		try:
-			consumer_key = token['twitter_api_key']
-			consumer_secret = token['twitter_api_secret_key']
-			access_token = token['twitter_access_token']
-			access_token_secret = token['twitter_access_token_secret']
+			client = tweepy.Client(
+				consumer_key = consumer_key,
+				consumer_secret = consumer_secret,
+				access_token = access_token,
+				access_token_secret = access_token_secret)
 
-			# Authenticate Twitter API
-			auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-			auth.set_access_token(access_token, access_token_secret)
-
-			# Create API object
-			api = tweepy.API(auth)
-			client = tweepy.Client(consumer_key=consumer_key, consumer_secret=consumer_secret,
-				access_token=access_token, access_token_secret=access_token_secret)
-
-			# Attach image and message to tweet
 			if filename is None:
-				client.create_tweet(text=message)
+				self.logger.info("create_tweet without media")
+				client.create_tweet(text = message) 
 			else:
+				self.logger.info("create_tweet with media")
+				auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+				auth.set_access_token(access_token, access_token_secret)
+				api = tweepy.API(auth)
 				media = api.media_upload(filename=filename)
-				client.create_tweet(text=message, media_ids=[media.media_id])
+				client.create_tweet(text = message, media_ids = [media.media_id]) 
 			return True
 
 		except Exception as e:
@@ -972,16 +980,27 @@ class CHydroMainController():
 			return False
 
 	def test_tweet(self, request):
-		ret = self.tweet("websocketサーバーからのtweetテスト")
+		filename = None
+		if (request['option'] == 'pic'):
+			data = self.db_manage.get_latest_picture(SAVE_PICTURE_DIR)
+			filename = data['picture_path']
+		now = datetime.now()
+		ret = self.tweet("websocketサーバーからのtweetテスト : " + now.strftime('%Y/%m/%d %H:%M:%S'), filename)
 		return self.make_result(ret, "tweet test")
 
 	def test_line(self, request):
 		message = self.line_notify("websocketサーバーからのlineテスト")
 		return self.make_result(True, message)
 	
-	def test_fan(self, request):
+	def test_ssr1(self, request):
 		control = request['option']
-		message = f"扇風機スイッチ:{control}"
+		message = f"SSR circulator:{control}"
+		self.raspi_ctl.circulator_switch(True if control=="on" else False)
+		return self.make_result(True, message)
+
+	def test_ssr2(self, request):
+		control = request['option']
+		message = f"SSR nightly:{control}"
 		self.raspi_ctl.nightly_switch(True if control=="on" else False)
 		return self.make_result(True, message)
 
@@ -1086,23 +1105,38 @@ def setup_logger(name, logfile):
 
 	return logger
 
+class TerminatedExecption(Exception):
+	pass
+
+def raise_exception(*_):
+	raise TerminatedExecption()
+
 # プログラムスタート
 if __name__ == '__main__':
+	signal.signal(signal.SIGTERM, raise_exception)
 	logger = setup_logger('hydro_websocketd', 'hydro_webs_log.txt')
 
-	logger.info("server start")
+	logger.info("##### server start #####")
 	main_ctl = CHydroMainController(logger)
 	main_ctl.start()
 
 	try:
 		logger.info("server run")
 		main_ctl.run_server()
+		logger.info("server halt")
 
 	# Ctrl-Cによるキーボード割り込みで終了
 	except KeyboardInterrupt:
-		logger.info("hydro_server ended. (KeyboardInterrupt)")
+		logger.info("### hydro_server ended. (KeyboardInterrupt)")
+	# systemdのstopコマンドで終了
+	except TerminatedExecption:
+		logger.info("### hydro_server ended. (systemd stop)")
+	except Exception as e:
+		import traceback
+		traceback.print_exc()
 	finally:
 		main_ctl.stop()
 		del main_ctl
-		logger.info("server end.")
+		logger.info("##### server end #####")
 
+# end.

@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2023.8.17');
+  $('#version').text('Ver.2024.4.29');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -148,7 +148,7 @@ function websocket_message(event)
   switch(data['command'])
   {
     case 'initial_data':
-      setValueReport(data);
+    //  setValueReport(data);
       setValuePicture(data);
       setValueBasic(data);
       setValueSchedule(data);
@@ -279,7 +279,6 @@ function setValueReport(data)
 function setValueBasic(data)
 {
   $('#titlename').text(data['myname']);
-
   $('#myid').text(data['myid']);
   $('#myname').text(data['myname']);
   $('#memo').text(data['memo']);
@@ -763,8 +762,8 @@ function showModalResult(data)
 //
 // デバッグ：サーバーへリクエストを送ってLEDをON/OFFするテスト
 //
-function ledButtonClick(color, state) {
-  websocket_send({'command': 'set_led', 'color': color, 'state': state});
+function ledButtonClick(color) {
+  websocket_send({'command': 'set_led', 'color': color});
 }
 
 //
