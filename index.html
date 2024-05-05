@@ -55,32 +55,32 @@
     <div class="content_bottom">
       <div class="content_full card-group text-white text-center bg-dark">
         <div class="card text-white bg-secondary rounded-0 sensor_card_ios" id="sensor_air_temp">
-          <div class="card-header p-0">気温</div>
-          <div class="card-body px-0 py-2"><span id="air_temp">XX.X</span>℃</div>
+          <div class="card-header p-1">気温</div>
+          <div class="card-body"><span id="air_temp">XX.X</span>℃</div>
         </div>
         <div class="card text-white bg-secondary sensor_card_ios" id="sensor_humidity">
-          <div class="card-header p-0">湿度</div>
-          <div class="card-body px-0 py-2"><span id="humidity">XX.X</span>％</div>
+          <div class="card-header p-1">湿度</div>
+          <div class="card-body"><span id="humidity">XX.X</span>％</div>
         </div>
         <div class="card text-white bg-secondary sensor_card_ios" id="sensor_water_temp">
-          <div class="card-header p-0">水温</div>
-          <div class="card-body px-0 py-2"><span id="water_temp">XX.X</span>℃</div>
+          <div class="card-header p-1">水温</div>
+          <div class="card-body"><span id="water_temp">XX.X</span>℃</div>
         </div>
         <div class="card text-white bg-secondary sensor_card_ios" id="sensor_water_level">
-          <div class="card-header p-0">水位</div>
-          <div class="card-body px-0 py-2"><span id="water_level">XX.X</span>％</div>
+          <div class="card-header p-1">水位</div>
+          <div class="card-body"><span id="water_level">XX.X</span>％</div>
         </div>
         <div class="card text-white bg-secondary sensor_card_ios" id="sensor_tds_level">
-          <div class="card-header p-0">濃度</div>
-          <div class="card-body px-0 py-2">EC <span id="tds_level">XX.X</span></div>
+          <div class="card-header p-1">濃度</div>
+          <div class="card-body px-0">EC <span id="tds_level">XX.X</span></div>
         </div>
         <div class="card text-white bg-secondary sensor_card_ios" id="sensor_brightness">
-          <div class="card-header p-0">明るさ</div>
-          <div class="card-body px-0 py-2"><span id="brightness">XX.X</span></div>
+          <div class="card-header p-1">明るさ</div>
+          <div class="card-body"><span id="brightness">XX.X</span></div>
         </div>
         <div class="card bg-dark rounded-0 sensor_card_ios">
-          <div class="card-header p-0">更新</div>
-          <div class="card-body px-0 py-1">
+          <div class="card-header p-1">更新</div>
+          <div class="card-body">
             <button class="btn btn-outline-secondary" onclick="reloadButtonClick()"><i class="fa fa-repeat fa-2x"></i></button>
           </div>
         </div>
@@ -187,8 +187,7 @@
                 <input class="input_number" name="evening_off" type="text" value=""> 
               </td>
               <td class="vmiddle lightgray">
-                夜間SW
-                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="nightly_active" value="1">
+                夜間停止
               </td>
             </tr>
             <tr>
@@ -209,6 +208,17 @@
                 <input class="input_number" name="refill_min" type="text" value="">
                 〜
                 <input class="input_number" name="refill_max" type="text" value="">秒間
+              </td>
+            </tr>
+            <tr>
+              <td class="vmiddle">追加スイッチ</td>
+              <td colspan="2">
+                サーキュレータ
+                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="nightly_active" value="1">
+              </td>
+              <td colspan="2">
+                夜間SW
+                <input type="checkbox" data-toggle="toggle" data-size="sm" data-onstyle="primary" data-offstyle="secondary" name="circulator_active" value="1">
               </td>
             </tr>
             <tr>
@@ -416,7 +426,7 @@
       <div class="content_top bg-dark"></div>
       <div class="content_main">
         <i class="fa fa-bug text-secondary m-2"> デバッグ用</i>
-        <div class="mt-1">
+        <div class="mt-0">
           <span>
             <span class="small">Socket:</span>
             <button onclick="reconnectButtonClick()" class="btn btn-secondary command_button">接続</button>
@@ -432,8 +442,9 @@
             <button onclick="ledButtonClick('none')" class="btn btn-secondary command_button">OFF</button>
           </span>
         </div>
-        <div class="mt-1">
+        <div class="mt-0">
           <span>
+            <span class="small">Sensors:</span>
             <button onclick="debugButtonMeasure('temp_humid')" class="btn btn-secondary command_button">温湿度</button>
             <button onclick="debugButtonMeasure('water_temp')" class="btn btn-secondary command_button">水温</button>
             <button onclick="debugButtonMeasure('water_level')" class="btn btn-secondary command_button">水位</button>
@@ -448,9 +459,9 @@
             <button onclick="debugButtonExec('test_line')" class="btn btn-secondary command_button">Line</button>
           </span>
         </div>
-        <div class="mt-1">
-          <span></span>
-            <span class="small">Circl:</span>
+        <div class="mt-0">
+          <span class="border_debug">
+            <span class="small">Circulator:</span>
             <button onclick="debugButtonExec('test_ssr1', 'on')" class="btn btn-secondary command_button">On</button>
             <button onclick="debugButtonExec('test_ssr1', 'off')" class="btn btn-secondary command_button">Off</button>
             <span class="small ml-3">Night:</span>
@@ -459,7 +470,7 @@
           </span>
         </div>
         <textarea class="content_message border border-dark" id="debug_message"></textarea>
-        <div>
+        <div class="mt-0">
           <button onclick="clearMessageClick()" class="btn btn-secondary command_button mr-5">clear</button>
           <span class="small">定時処理タイミング：
           <input class="input_number" type="text" value="0" name="minute_start">

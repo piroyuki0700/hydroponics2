@@ -107,7 +107,7 @@ function websocketConnect()
 
 function websocket_open(event)
 {
-  printDebugMessage("websocket opened.");
+  printDebugMessage("websocket opened. " + server_uri);
   $('#reconnectButton').hide();
   $('#confirmModal').modal('hide');
 }
@@ -148,7 +148,7 @@ function websocket_message(event)
   switch(data['command'])
   {
     case 'initial_data':
-    //  setValueReport(data);
+      setValueReport(data);
       setValuePicture(data);
       setValueBasic(data);
       setValueSchedule(data);

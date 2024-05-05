@@ -493,7 +493,7 @@ class CHydroMainController():
 		self.logger.debug(message)
 
 		# select led color from total status
-		self.raspi_ctl.update_led(status['total_status'])
+		self.raspi_ctl.update_led(report['total_status'])
 
 		# tweet when it is a report time.
 		if int(self.schedule['notify_active']) and self.schedule['notify_time'] == now.hour:
