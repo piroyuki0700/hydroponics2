@@ -30,8 +30,7 @@ MINUTE_REFILL = 55
 DEFAULT_ONTIME = 7 * 60
 DEFAULT_OFFTIME = 8 * 60
 
-SUBPUMP_MANUAL_LOOP_MAX = 10
-SUBPUMP_MANUAL_LOOP_DELAY = 10
+SUBPUMP_MANUAL_SECONDS = 60
 
 SAVE_PICTURE_DIR = 'picture'
 TMP_PICTURE_DIR = 'tmp_picture'
@@ -125,8 +124,6 @@ class CHydroMainController():
 	command_table = None
 	notify_sensor_error = True
 	prev_level = 100
-	event_stop_timer = None
-	subpump_updater_on = False
 
 	# keep latest schedule setting here
 	schedule = None
@@ -142,7 +139,6 @@ class CHydroMainController():
 		self.executor_camera = ThreadPoolExecutor(1, "camera")
 		self.executor_report = ThreadPoolExecutor(1, "report")
 		self.executor_subpump = ThreadPoolExecutor(1, "subpump")
-		self.event_stop_timer = threading.Event()
 
 		self.command_table = {
 			'post_basic'       : self.post_basic,
@@ -534,6 +530,8 @@ class CHydroMainController():
 			self.subpump_trigger_switch(request)
 		elif self.schedule['refill_trigger'] == REFILL_TRIGGER_LEVEL:
 			self.subpump_trigger_level()
+		else:
+			return self.make_result(False, "refill is disabled.")
 
 	def tmp_report(self, request):
 		loop = asyncio.get_running_loop()
@@ -762,7 +760,7 @@ class CHydroMainController():
 		self.logger.debug("called")
 
 		self.websocketd.broadcast(self.subpump_status_command(True))
-		result = self.raspi_ctl.subpump_refill(self.schedule['refill_min'], self.schedule['refill_max'])
+		result = self.raspi_ctl.subpump_exec(self.schedule['refill_min'], self.schedule['refill_max'])
 		message = f"{result['past']}秒間、水を追加しました。"
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
@@ -831,7 +829,7 @@ class CHydroMainController():
 		self.logger.debug(f"seconds={seconds}")
 
 		self.websocketd.broadcast(self.subpump_status_command(True))
-		result = self.raspi_ctl.subpump_refill(self.schedule['refill_min'], seconds)
+		result = self.raspi_ctl.subpump_exec(self.schedule['refill_min'], seconds)
 		message = f"{result['past']}秒間、水を追加しました。"
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
@@ -880,8 +878,7 @@ class CHydroMainController():
 	def subpump_start(self, request):
 		self.logger.debug("called")
 		ret = False
-		if not self.subpump_updater_on and not self.raspi_ctl.subpump_working:
-			self.event_stop_timer.clear()
+		if not self.raspi_ctl.subpump_working:
 			self.future_subpump = self.executor_subpump.submit(self.subpump_manual, request)
 			ret = True
 
@@ -889,34 +886,20 @@ class CHydroMainController():
 
 	def subpump_stop(self, request=None):
 		self.logger.debug("called")
-		ret = False
-		if self.subpump_updater_on:
-			self.event_stop_timer.set()
+
+		ret = self.raspi_ctl.subpump_cancel()
+		if ret is True:
 			self.future_subpump.result()
-			ret = True
-		elif self.raspi_ctl.subpump_working:
-			self.raspi_ctl.subpump_callback()
 
 		if request is not None:
 			return self.make_result(ret, "subpump switch off")
 
+	def subpump_lap(self):
+		self.websocketd.broadcast(self.subpump_status_command(True))
+
 	def subpump_manual(self, request):
 		self.logger.debug("called")
-		self.subpump_updater_on = True
-		self.raspi_ctl.subpump_switch(True)
-
-		count = 0
-		while not self.event_stop_timer.is_set():
-			self.websocketd.broadcast(self.subpump_update(request))
-			self.event_stop_timer.wait(SUBPUMP_MANUAL_LOOP_DELAY)
-			count += 1
-			if count >= SUBPUMP_MANUAL_LOOP_MAX:
-				break
-
-		self.raspi_ctl.subpump_switch(False)
-		self.event_stop_timer.clear()
-		self.subpump_updater_on = False
-
+		result = self.raspi_ctl.subpump_exec(self.schedule['refill_min'], SUBPUMP_MANUAL_SECONDS, self.subpump_lap)
 		self.websocketd.broadcast(self.subpump_update(request))
 		self.logger.debug("end")
 		return True

@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2024.4.29');
+  $('#version').text('Ver.2024.5.6');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -318,6 +318,7 @@ function setValueSchedule(data)
   $('input[name="noon_off"]').val(data['noon_off']);
   $('input[name="evening_on"]').val(data['evening_on']);
   $('input[name="evening_off"]').val(data['evening_off']);
+  $('input[name="circulator_active"]').bootstrapToggle(data['circulator_active']?'on':'off');
   $('input[name="nightly_active"]').bootstrapToggle(data['nightly_active']?'on':'off');
   $('input[name="time_spot1"]').val(data['time_spot1']);
   $('input[name="time_spot2"]').val(data['time_spot2']);
@@ -533,6 +534,7 @@ function scheduleCommitClick() {
 
   // トグルスイッチの値の追加
   data["schedule_active"] = $('input[name="schedule_active"]').prop("checked")?"1":"0";
+  data["circulator_active"] = $('input[name="circulator_active"]').prop("checked")?"1":"0";
   data["nightly_active"] = $('input[name="nightly_active"]').prop("checked")?"1":"0";
   data["notify_active"] = $('input[name="notify_active"]').prop("checked")?"1":"0";
   data["emergency_active"] = $('input[name="emergency_active"]').prop("checked")?"1":"0";
