@@ -18,18 +18,18 @@ div.content_frame {
   min-height: 300px;
 */
   overflow: hidden;
-  font-size: 2em;
+  font-size: 1.9em;
   background-color: white;
 }
 
 div.content_left {
-  width: 20%;
+  width: 18%;
   height: 100%;
   float: left;
 }
 
 div.content_right {
-  width: 80%;
+  width: 82%;
   height: 100%;
   float: right;
 }
@@ -64,32 +64,32 @@ div.content_title {
   width: 100%;
   height: 15%;
   font-weight: bold;
-  padding-top: 5px;
+  padding-top: 10px;
 }
 
 div.content_cycle {
   background: url("hydroponics.png") no-repeat center center;
   background-size: 200px;
   width: 100%;
-  height: 35%;
+  height: 37%;
 }
 
 div.content_datetime {
   width: 100%;
-  height: 20%;
+  height: 18%;
   color: white;
   padding-top: 5px;
 }
 
 div.content_date {
-  font-size: 0.9em;
+  font-size: 0.8em;
 }
 
 div.content_picture {
   background-color: slategray;
   background-size: cover;
   width: 100%;
-  height: 80%;
+  height: 82%;
   text-align: right;
   padding-top: 3px;
   padding-right: 5px;
@@ -107,7 +107,7 @@ span.picture_datetime {
 
 div.content_bottom {
   width: 100%;
-  height: 20%;
+  height: 18%;
   position: relative;
 }
 
