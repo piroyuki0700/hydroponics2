@@ -245,6 +245,7 @@ class CHydroMainController():
 		try:
 			self.scheduler_main()
 		except Exception as e:
+			self.set_next_timer(MINUTE_START)
 			self.logger.error(f"Unknown exception: {e}")
 
 	def scheduler_main(self):
@@ -264,7 +265,7 @@ class CHydroMainController():
 				self.subpump_refill()
 				next_minute = MINUTE_START
 			else:
-				self.logger.error(f"timer might expire at the wrong time.")
+				self.logger.error(f"timer might expire at the wrong time. {now.hour}:{now.minute}:{now.second}")
 				self.trigger_stop()
 				next_minute = MINUTE_START
 		else:
@@ -556,6 +557,8 @@ class CHydroMainController():
 
 		if report['brightness'] is not None:
 			status['brightness_status'] = 'success'
+		if report['distance'] is None:
+			del report['distance']
 		limit = self.db_manage.get_sensor_limit()
 		items = ['air_temp', 'humidity', 'water_temp', 'water_level', 'tds_level']
 		for item in items:
