@@ -122,7 +122,6 @@ class CHydroMainController():
 	future_report = None
 	future_subpump = None
 	command_table = None
-	notify_sensor_error = True
 	prev_level = 100
 
 	# keep latest schedule setting here
@@ -269,13 +268,17 @@ class CHydroMainController():
 				self.trigger_stop()
 				next_minute = MINUTE_START
 		else:
+			inactive_string = 'inactive'
 			if now.minute == MINUTE_START:
 				self.trigger_start(now, activate, ontime, offtime)
 			else:
 				self.logger.error(f"timer might expire at the wrong time.")
+				inactive_string = 'recovery'
 				self.trigger_stop()
+
 			next_minute = MINUTE_START
-			self.notify_sensor_error = True
+			data = {'command': 'inactive_color', 'activate': False, 'inactive_string': inactive_string}
+			self.websocketd.broadcast(data)
 
 		self.set_next_timer(next_minute)
 
@@ -354,6 +357,12 @@ class CHydroMainController():
 			data.update(report)
 			data.update(status)
 		data.update(self.subpump_status())
+
+		now = datetime.now()
+		(activate, ontime, offtime) = self.check_time_span(now)
+		data['activate'] = activate
+		if activate is False:
+			data['inactive_string'] = 'inactive'
 		return data
 
 	def handle_request(self, request):

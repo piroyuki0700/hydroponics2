@@ -155,6 +155,7 @@ function websocket_message(event)
       setValueSensorLimit(data);
       setValuePumpStatus(data);
       setValueRefillUpdate(data);
+      setValueInactiveColor(data);
       break;
 
     case 'report':
@@ -188,6 +189,9 @@ function websocket_message(event)
     case 'refill_update':
       setValueRefillUpdate(data);
       break;
+
+    case 'inactive_color':
+      setValueInactiveColor(data);
 
     case 'result':
       printDebugMessage(data['datetime'] + ': ' + data['result'] + ' - ' + data['message']);
@@ -459,6 +463,29 @@ function setValueRefillUpdate(data) {
     $('#refill_record3').text(data['refill_record3']);
   }
 }
+
+function setValueInactiveColor(data) {
+  if (data['activate'] == false) {
+    const sensors = new Array('air_temp', 'humidity', 'water_temp', 'water_level', 'tds_level', 'brightness');
+
+    for (let i = 0; i < sensors.length; i++) {
+      const item = '#sensor_' + sensors[i];
+
+      // センサー値エリアの色変更
+      $(item).removeClass("bg-success").removeClass("bg-warning").removeClass("bg-danger").removeClass("bg-secondary");
+      $(item).addClass("bg-secondary");
+    }
+
+    // ステータスエリア全体の色変更
+    $('#status_color').removeClass("alert-success").removeClass("alert-warning").removeClass("alert-danger").removeClass("alert-secondary");
+    $('#status_color').addClass("alert-primary")
+    // バッジの色と文字列変更
+    $('#status_badge').removeClass("badge-success").removeClass("badge-warning").removeClass("badge-danger").removeClass("badge-secondary");
+    $('#status_badge').addClass("badge-primary")
+    $('#status_badge').text(data['inactive_string']);
+  }
+}
+
 //
 // メイン：ポンプボタン
 //
