@@ -287,13 +287,14 @@ function setValueBasic(data)
   $('#myname').text(data['myname']);
   $('#memo').text(data['memo']);
 
-  if (data['started'] != null)
-  {
+  if (data['started'] != null) {
     $('#started').text(data['started']);
   }
-  if (data['finished'] != null)
-  {
+  if (data['finished'] != null) {
     $('#finished').text(data['finished']);
+  }
+  if (data['uptime'] != null) {
+    $('#uptime').text(data['uptime']);
   }
 }
 

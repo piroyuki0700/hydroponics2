@@ -41,6 +41,9 @@ REFILL_TRIGGER_LEVEL = 2
 
 SENSOR_ERROR_COUNT_LIMIT = 10
 
+RETRY_CAMERA_MAX = 3
+RETRY_CAMERA_DELAY = 3
+
 class CHydroSwitcher():
 	logger = None
 	main_ctl = None
@@ -190,6 +193,7 @@ class CHydroMainController():
 		del self.raspi_ctl
 
 	def start(self):
+		self.db_manage.set_uptime()
 		self.schedule = self.db_manage.get_schedule()
 		self.scheduler_start()
 
@@ -244,8 +248,8 @@ class CHydroMainController():
 		try:
 			self.scheduler_main()
 		except Exception as e:
-			self.set_next_timer(MINUTE_START)
 			self.logger.error(f"Unknown exception: {e}")
+			self.set_next_timer(MINUTE_START)
 
 	def scheduler_main(self):
 		self.logger.debug("called ------------------------------")
@@ -635,7 +639,13 @@ class CHydroMainController():
 		#self.logger.debug(cmd)
 
 		result = {'command': key, f'{key}_name': name, f'{key}_path': path, f'{key}_taken': now.strftime('%Y/%m/%d %H:%M:%S')}
-		ret = subprocess.run(cmd, shell=True)
+
+		for i in range(RETRY_CAMERA_MAX):
+			ret = subprocess.run(cmd, shell=True)
+			self.logger.debug(f"camera process returncode={ret.returncode}.")
+			if ret.returncode == 0:
+				break
+			time.sleep(RETRY_CAMERA_DELAY)
 
 		# The camera command result is success if the target picture file exists.
 		is_file = os.path.isfile(path)

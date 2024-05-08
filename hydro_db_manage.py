@@ -249,6 +249,12 @@ class CHydroDatabaseManager():
 		setdata = {f"{data['kind']}ed": now.strftime('%Y/%m/%d %H:%M:%S')}
 		return self.updateone('setting_basic', setdata)
 
+	def set_uptime(self):
+		self.logger.debug("called")
+		now = datetime.now()
+		setdata = {"uptime": now.strftime('%Y/%m/%d %H:%M:%S')}
+		return self.updateone('setting_basic', setdata)
+
 	def set_schedule(self, data):
 		self.logger.debug("called")
 		return self.updateone('setting_schedule', data)
