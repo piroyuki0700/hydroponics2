@@ -1,8 +1,8 @@
--- MySQL dump 10.15  Distrib 10.0.28-MariaDB, for debian-linux-gnueabihf (armv7l)
+-- MariaDB dump 10.19  Distrib 10.11.6-MariaDB, for debian-linux-gnu (aarch64)
 --
--- Host: hydro2022summer    Database: hydro2022summer
+-- Host: localhost    Database: hydro2024summer
 -- ------------------------------------------------------
--- Server version	10.0.28-MariaDB-2+b1
+-- Server version	10.11.6-MariaDB-0+deb12u1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -27,7 +27,7 @@ CREATE TABLE `picture` (
   `filename` varchar(64) DEFAULT NULL,
   `taken` datetime DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,8 +42,19 @@ CREATE TABLE `pump_status` (
   `status` varchar(16) DEFAULT NULL,
   `end_time` datetime DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pump_status`
+--
+
+LOCK TABLES `pump_status` WRITE;
+/*!40000 ALTER TABLE `pump_status` DISABLE KEYS */;
+INSERT INTO `pump_status` VALUES
+(1,NULL,NULL);
+/*!40000 ALTER TABLE `pump_status` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `refill_record`
@@ -62,7 +73,7 @@ CREATE TABLE `refill_record` (
   `upper` tinyint(1) DEFAULT NULL,
   `lower` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -84,8 +95,33 @@ CREATE TABLE `report` (
   `brightness` float DEFAULT NULL,
   `picture_no` int(11) DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sensor_error`
+--
+
+DROP TABLE IF EXISTS `sensor_error`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sensor_error` (
+  `no` int(11) NOT NULL AUTO_INCREMENT,
+  `water_level` int(11) DEFAULT NULL,
+  PRIMARY KEY (`no`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sensor_error`
+--
+
+LOCK TABLES `sensor_error` WRITE;
+/*!40000 ALTER TABLE `sensor_error` DISABLE KEYS */;
+INSERT INTO `sensor_error` VALUES
+(1,0);
+/*!40000 ALTER TABLE `sensor_error` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `setting_basic`
@@ -97,12 +133,24 @@ DROP TABLE IF EXISTS `setting_basic`;
 CREATE TABLE `setting_basic` (
   `no` int(11) NOT NULL AUTO_INCREMENT,
   `myname` varchar(32) DEFAULT NULL,
-  `memo` text,
+  `memo` text DEFAULT NULL,
   `started` datetime DEFAULT NULL,
   `finished` datetime DEFAULT NULL,
+  `uptime` datetime DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `setting_basic`
+--
+
+LOCK TABLES `setting_basic` WRITE;
+/*!40000 ALTER TABLE `setting_basic` DISABLE KEYS */;
+INSERT INTO `setting_basic` VALUES
+(1,'水耕栽培 #1','水耕栽培テストデータ',NULL,NULL,NULL);
+/*!40000 ALTER TABLE `setting_basic` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `setting_schedule`
@@ -125,6 +173,7 @@ CREATE TABLE `setting_schedule` (
   `evening_on` int(11) DEFAULT NULL,
   `evening_off` int(11) DEFAULT NULL,
   `nightly_active` tinyint(1) DEFAULT NULL,
+  `circulator_active` tinyint(1) DEFAULT NULL,
   `time_spot1` int(11) DEFAULT NULL,
   `time_spot2` int(11) DEFAULT NULL,
   `time_spot3` int(11) DEFAULT NULL,
@@ -141,8 +190,19 @@ CREATE TABLE `setting_schedule` (
   `notify_time` tinyint(1) DEFAULT NULL,
   `emergency_active` int(11) DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `setting_schedule`
+--
+
+LOCK TABLES `setting_schedule` WRITE;
+/*!40000 ALTER TABLE `setting_schedule` DISABLE KEYS */;
+INSERT INTO `setting_schedule` VALUES
+(1,1,6,9,16,19,5,5,10,5,5,5,0,0,21,0,3,5,0,200,5,8,10,12,14,16,1,12,1);
+/*!40000 ALTER TABLE `setting_schedule` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `setting_sensor_limit`
@@ -170,8 +230,19 @@ CREATE TABLE `setting_sensor_limit` (
   `tds_level_high` float DEFAULT NULL,
   `tds_level_vhigh` float DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `setting_sensor_limit`
+--
+
+LOCK TABLES `setting_sensor_limit` WRITE;
+/*!40000 ALTER TABLE `setting_sensor_limit` DISABLE KEYS */;
+INSERT INTO `setting_sensor_limit` VALUES
+(1,1,5,35,40,10,30,1,5,25,35,10,25,0.2,0.5,3,5);
+/*!40000 ALTER TABLE `setting_sensor_limit` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `sns_token`
@@ -188,7 +259,7 @@ CREATE TABLE `sns_token` (
   `twitter_access_token_secret` varchar(64) DEFAULT NULL,
   `line_access_token` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`no`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -199,4 +270,4 @@ CREATE TABLE `sns_token` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-06-21 22:47:11
+-- Dump completed on 2024-05-08 22:17:28
