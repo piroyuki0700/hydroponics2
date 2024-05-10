@@ -20,7 +20,7 @@ const server_uri = 'ws://' + location.hostname + ':10700/'
 //
 $(function(){
   // バージョン
-  $('#version').text('Ver.2024.4.29');
+  $('#version').text('Ver.2024.5.6');
 
   // 最初は非表示にするもの
   $('#setting').hide();	// 設定ページ
@@ -107,7 +107,7 @@ function websocketConnect()
 
 function websocket_open(event)
 {
-  printDebugMessage("websocket opened.");
+  printDebugMessage("websocket opened. " + server_uri);
   $('#reconnectButton').hide();
   $('#confirmModal').modal('hide');
 }
@@ -148,13 +148,14 @@ function websocket_message(event)
   switch(data['command'])
   {
     case 'initial_data':
-    //  setValueReport(data);
+      setValueReport(data);
       setValuePicture(data);
       setValueBasic(data);
       setValueSchedule(data);
       setValueSensorLimit(data);
       setValuePumpStatus(data);
       setValueRefillUpdate(data);
+      setValueInactiveColor(data);
       break;
 
     case 'report':
@@ -188,6 +189,9 @@ function websocket_message(event)
     case 'refill_update':
       setValueRefillUpdate(data);
       break;
+
+    case 'inactive_color':
+      setValueInactiveColor(data);
 
     case 'result':
       printDebugMessage(data['datetime'] + ': ' + data['result'] + ' - ' + data['message']);
@@ -283,13 +287,14 @@ function setValueBasic(data)
   $('#myname').text(data['myname']);
   $('#memo').text(data['memo']);
 
-  if (data['started'] != null)
-  {
+  if (data['started'] != null) {
     $('#started').text(data['started']);
   }
-  if (data['finished'] != null)
-  {
+  if (data['finished'] != null) {
     $('#finished').text(data['finished']);
+  }
+  if (data['uptime'] != null) {
+    $('#uptime').text(data['uptime']);
   }
 }
 
@@ -318,6 +323,7 @@ function setValueSchedule(data)
   $('input[name="noon_off"]').val(data['noon_off']);
   $('input[name="evening_on"]').val(data['evening_on']);
   $('input[name="evening_off"]').val(data['evening_off']);
+  $('input[name="circulator_active"]').bootstrapToggle(data['circulator_active']?'on':'off');
   $('input[name="nightly_active"]').bootstrapToggle(data['nightly_active']?'on':'off');
   $('input[name="time_spot1"]').val(data['time_spot1']);
   $('input[name="time_spot2"]').val(data['time_spot2']);
@@ -458,6 +464,29 @@ function setValueRefillUpdate(data) {
     $('#refill_record3').text(data['refill_record3']);
   }
 }
+
+function setValueInactiveColor(data) {
+  if (data['activate'] == false) {
+    const sensors = new Array('air_temp', 'humidity', 'water_temp', 'water_level', 'tds_level', 'brightness');
+
+    for (let i = 0; i < sensors.length; i++) {
+      const item = '#sensor_' + sensors[i];
+
+      // センサー値エリアの色変更
+      $(item).removeClass("bg-success").removeClass("bg-warning").removeClass("bg-danger").removeClass("bg-secondary");
+      $(item).addClass("bg-secondary");
+    }
+
+    // ステータスエリア全体の色変更
+    $('#status_color').removeClass("alert-success").removeClass("alert-warning").removeClass("alert-danger").removeClass("alert-secondary");
+    $('#status_color').addClass("alert-primary")
+    // バッジの色と文字列変更
+    $('#status_badge').removeClass("badge-success").removeClass("badge-warning").removeClass("badge-danger").removeClass("badge-secondary");
+    $('#status_badge').addClass("badge-primary")
+    $('#status_badge').text(data['inactive_string']);
+  }
+}
+
 //
 // メイン：ポンプボタン
 //
@@ -533,6 +562,7 @@ function scheduleCommitClick() {
 
   // トグルスイッチの値の追加
   data["schedule_active"] = $('input[name="schedule_active"]').prop("checked")?"1":"0";
+  data["circulator_active"] = $('input[name="circulator_active"]').prop("checked")?"1":"0";
   data["nightly_active"] = $('input[name="nightly_active"]').prop("checked")?"1":"0";
   data["notify_active"] = $('input[name="notify_active"]').prop("checked")?"1":"0";
   data["emergency_active"] = $('input[name="emergency_active"]').prop("checked")?"1":"0";

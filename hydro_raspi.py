@@ -7,7 +7,6 @@ import RPi.GPIO as GPIO
 import neopixel
 import adafruit_dht
 import board
-#from board import *
 import smbus
 import time
 import re
@@ -48,14 +47,14 @@ gpio_trig = 14
 gpio_echo = 4
 
 # パルス検出タイムアウト
-SONAR_TIMEOUT = (30 / 1000) # 10ms
+SONAR_TIMEOUT = (30 / 1000) # ms
 # 水面までの距離の有効範囲
 VALID_DISTANCE_MIN = 3
 VALID_DISTANCE_MAX = 30
 # センサーから底までの距離
 SENSOR_DISTANCE = 29
 # 満水時の水位
-WATER_LEVEL_FULL = 20
+WATER_LEVEL_FULL = 21
 
 # 各センサーのリトライ回数とディレイ
 RETRY_TEMPHUMID_MAX = 3
@@ -298,6 +297,7 @@ class CHydroRaspiController():
 		self.logger.debug(f"called. enable={enable}")
 		self.subpump_working = enable
 		GPIO.setup(gpio_subpump, GPIO.OUT)
+#		enable = False # デバッグ用。実際のサブポンプ動作なし
 		GPIO.output(gpio_subpump, GPIO.HIGH if enable is True else GPIO.LOW)
 		return True
 
@@ -307,47 +307,52 @@ class CHydroRaspiController():
 		float_sw = GPIO.input(gpio_float_sub)
 		return float_sw == GPIO.LOW
 
-	# サブタンクの水終了コールバック
-	def subpump_callback(self, channel=0):
-		self.logger.warning(f"cancel subpump {channel}")
-		if channel == gpio_float_sub:
-			available = self.subpump_available()
-			if not available:
-				self.event_subpump.set()
-		elif channel == gpio_float_upper:
-			full = self.check_float_upper()
-			if full:
-				self.event_subpump.set()
-		elif channel == 0:
+	# サブタンクからの水補充中断
+	def subpump_cancel(self):
+		self.logger.warning(f"cancel subpump (working={self.subpump_working})")
+		ret = False
+		if self.subpump_working is True:
 			self.event_subpump.set()
+			ret = True
+		return ret
 		
 	# サブタンクからの水補充
-	def subpump_refill(self, min, max):
+	def subpump_exec(self, min, max, lap_callback=None):
 		self.logger.debug("called")
 		self.event_subpump.clear()
-
-		# サブタンクの水がなくなった場合
-		GPIO.add_event_detect(gpio_float_sub, GPIO.RISING, self.subpump_callback, 2000)
-		# メインタンクが満タンになった場合
-		GPIO.add_event_detect(gpio_float_upper, GPIO.FALLING, self.subpump_callback, 2000)
-		self.logger.debug("add_event_detect")
 
 		start_time = datetime.now()
 		self.logger.debug("start_time: " + start_time.strftime('%Y/%m/%d %H:%M:%S'))
 		self.subpump_switch(True)
 
-		ret = self.event_subpump.wait(max)
-#		if ret == True:
-#			time.sleep(min) # センサー感知から最短動作させて停止
+		remain = max
+		current = 0
+		while 0 < remain:
+			if min < remain:
+				current = min
+			else:
+				current = remain
+			remain -= current
+
+			ret = self.event_subpump.wait(current)
+			if ret is True:
+				self.logger.debug("subpump canceled.")
+				break # キャンセルされたとき
+			if self.subpump_available() is False:
+				self.logger.debug("subpump stop (not available)")
+				break # サブタンクの水がなくなったとき
+			if self.check_float_upper() is True:
+				self.logger.debug("subpump stop (water full)")
+				break # タンクが満タンになったとき
+
+			if remain != 0 and lap_callback is not None:
+				lap_callback()
 
 		self.subpump_switch(False)
-		end_time = datetime.now()
-
-		past = int((end_time - start_time).total_seconds()) + 1
-		GPIO.remove_event_detect(gpio_float_sub)
-		GPIO.remove_event_detect(gpio_float_upper)
-		self.logger.debug("remove_event_detect")
 		self.event_subpump.clear()
+
+		end_time = datetime.now()
+		past = int((end_time - start_time).total_seconds()) + 1
 
 		empty = not self.subpump_available()
 		return {'past': past, 'empty': empty}
@@ -365,3 +370,4 @@ class CHydroRaspiController():
 		GPIO.setup(gpio_nightly, GPIO.OUT)
 		GPIO.output(gpio_nightly, GPIO.HIGH if enable is True else GPIO.LOW)
 		return True
+

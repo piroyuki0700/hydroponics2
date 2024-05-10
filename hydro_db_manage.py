@@ -11,8 +11,8 @@ import threading
 import logging
 import json
 
-#DATABASE_ID = 'hydro2024summer'
-DATABASE_ID = 'hydro2024test'
+DATABASE_ID = 'hydro2024summer'
+#DATABASE_ID = 'hydro2024test'
 
 class CHydroDatabaseManager():
 	logger = None
@@ -247,6 +247,12 @@ class CHydroDatabaseManager():
 		self.logger.debug("called")
 		now = datetime.now()
 		setdata = {f"{data['kind']}ed": now.strftime('%Y/%m/%d %H:%M:%S')}
+		return self.updateone('setting_basic', setdata)
+
+	def set_uptime(self):
+		self.logger.debug("called")
+		now = datetime.now()
+		setdata = {"uptime": now.strftime('%Y/%m/%d %H:%M:%S')}
 		return self.updateone('setting_basic', setdata)
 
 	def set_schedule(self, data):

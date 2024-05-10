@@ -9,8 +9,8 @@ body{
 }
 
 div.content_frame {
-  width: 1024px;
-  height: 600px;
+  width: 1280px;
+  height: 720px;
 /*
   width: 100%;
   height: 100%;
@@ -18,25 +18,25 @@ div.content_frame {
   min-height: 300px;
 */
   overflow: hidden;
-  font-size: 1.8em;
+  font-size: 1.9em;
   background-color: white;
 }
 
 div.content_left {
-  width: 20%;
+  width: 18%;
   height: 100%;
   float: left;
 }
 
 div.content_right {
-  width: 80%;
+  width: 82%;
   height: 100%;
   float: right;
 }
 
 div.content_logo {
-  background: url("pirolab_logo_circle.png") no-repeat center top;
-  background-size: 170px;
+  background: url("pirolab_logo_circle.png") no-repeat center;
+  background-size: 200px;
   width: 100%;
   height: 30%;
   position: relative;
@@ -64,19 +64,21 @@ div.content_title {
   width: 100%;
   height: 15%;
   font-weight: bold;
+  padding-top: 10px;
 }
 
 div.content_cycle {
   background: url("hydroponics.png") no-repeat center center;
-  background-size: 170px;
+  background-size: 200px;
   width: 100%;
-  height: 35%;
+  height: 37%;
 }
 
 div.content_datetime {
   width: 100%;
-  height: 20%;
+  height: 18%;
   color: white;
+  padding-top: 5px;
 }
 
 div.content_date {
@@ -87,7 +89,7 @@ div.content_picture {
   background-color: slategray;
   background-size: cover;
   width: 100%;
-  height: 80%;
+  height: 82%;
   text-align: right;
   padding-top: 3px;
   padding-right: 5px;
@@ -105,13 +107,13 @@ span.picture_datetime {
 
 div.content_bottom {
   width: 100%;
-  height: 20%;
+  height: 18%;
   position: relative;
 }
 
 textarea.content_message {
   width: 100%;
-  height: 50%;
+  height: 60%;
   font-size: 0.8em;
 }
 
