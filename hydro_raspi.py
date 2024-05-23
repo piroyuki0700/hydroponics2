@@ -57,13 +57,13 @@ SENSOR_DISTANCE = 29
 WATER_LEVEL_FULL = 21
 
 # 各センサーのリトライ回数とディレイ
-RETRY_TEMPHUMID_MAX = 3
-RETRY_TEMPHUMID_DELAY = 1
+RETRY_TEMPHUMID_MAX = 5
+RETRY_TEMPHUMID_DELAY = 0.8
 RETRY_WATERTEMP_MAX = 3
 RETRY_WATERTEMP_DELAY = 0.5
-RETRY_DISTANCE_MAX = 5
+RETRY_DISTANCE_MAX = 6
 RETRY_DISTANCE_DELAY = 0.5
-RETRY_TDS_MAX = 5
+RETRY_TDS_MAX = 6
 RETRY_TDS_DELAY = 0.5
 
 class CHydroRaspiController():
@@ -197,7 +197,7 @@ class CHydroRaspiController():
 			time.sleep(0.1)
 			value = bus.read_byte(adda_address)     # 2回読まないとあまり変化しない
 			self.logger.debug(f"{i}: {value}")
-			if 0 < value and value < 100:
+			if 5 < value and value < 100:
 				measured = True
 				break
 			time.sleep(RETRY_TDS_DELAY)

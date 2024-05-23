@@ -210,6 +210,14 @@ class CHydroMainController():
 		(activate, ontime, offtime) = self.check_time_span(now)
 
 		if activate == True:
+			status = {}
+			report = self.db_manage.get_latest_report()
+			if len(report):
+				status = self.evaluate(report)
+				self.raspi_ctl.update_led(status['total_status'])
+			else:
+				self.raspi_ctl.update_led('white')
+
 			if now.minute < MINUTE_START:
 				self.logger.info("next start")
 				next_minute = MINUTE_START
@@ -217,6 +225,8 @@ class CHydroMainController():
 				self.logger.info("next stop")
 				self.switcher.set_time(ontime * 60, offtime * 60)
 				self.switcher.start()
+				if 'air_temp_status' in status:
+					self.set_circulator(status['air_temp_status'])
 				next_minute = MINUTE_STOP
 			elif now.minute < MINUTE_REFILL:
 				self.logger.info("next refill")
@@ -226,12 +236,6 @@ class CHydroMainController():
 				self.logger.info("next start")
 				next_minute = MINUTE_START
 
-			report = self.db_manage.get_latest_report()
-			if len(report):
-				status = self.evaluate(report)
-				self.raspi_ctl.update_led(status['total_status'])
-			else:
-				self.raspi_ctl.update_led('white')
 		else:
 			self.switcher.stop()
 			next_minute = MINUTE_START
@@ -473,9 +477,7 @@ class CHydroMainController():
 		message = "【自動送信】"
 		if 'air_temp' in report:
 			message += f"気温 {report['air_temp']}℃({symbol[report['air_temp_status']]})、"
-			if report['air_temp_status'] == 'danger' or report['air_temp_status'] == 'warning':
-				if int(self.schedule['circulator_active']):
-					self.raspi_ctl.circulator_switch(True)
+			self.set_circulator(report['air_temp_status'])
 		else:
 			message += "気温 －、"
 		if 'humidity' in report:
@@ -528,6 +530,11 @@ class CHydroMainController():
 		self.websocketd.broadcast(report)
 		if 'water_level' in report:
 			self.prev_level = report['water_level']
+
+	def set_circulator(self, status):
+		if status == 'danger' or status == 'warning':
+			if int(self.schedule['circulator_active']):
+				self.raspi_ctl.circulator_switch(True)
 
 	def sensor_error(self, sensor):
 		over_limit = self.db_manage.countup_sensor_error(sensor, SENSOR_ERROR_COUNT_LIMIT)
