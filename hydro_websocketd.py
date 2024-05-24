@@ -269,6 +269,7 @@ class CHydroMainController():
 				self.trigger_stop()
 				next_minute = MINUTE_REFILL
 			elif now.minute == MINUTE_REFILL:
+				self.raspi_ctl.circulator_switch(False)
 				self.subpump_refill()
 				next_minute = MINUTE_START
 			else:
