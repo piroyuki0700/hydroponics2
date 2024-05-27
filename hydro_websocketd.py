@@ -311,6 +311,7 @@ class CHydroMainController():
 		if now.hour < self.schedule['time_morning'] or self.schedule['time_night'] <= now.hour:
 			time_span = 'night'
 			activate = False
+			self.raspi_ctl.circulator_switch(False)
 			if int(self.schedule['nightly_active']):
 				self.raspi_ctl.nightly_switch(True)
 		else:
