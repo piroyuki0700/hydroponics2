@@ -329,7 +329,7 @@ function setValueSchedule(data)
   $('input[name="time_spot2"]').val(data['time_spot2']);
   $('input[name="time_spot3"]').val(data['time_spot3']);
   $('input[name="spot_on"]').val(data['spot_on']);
-  $('input[name="refill_trigger"]').val([data['refill_trigger']]);
+  $('input[name="refill_trigger"]').bootstrapToggle(data['refill_trigger']?'on':'off');
   $('input[name="refill_days"]').val(data['refill_days']);
   $('input[name="refill_max"]').val(data['refill_max']);
   $('input[name="camera1"]').val(data['camera1']);
@@ -566,10 +566,7 @@ function scheduleCommitClick() {
   data["nightly_active"] = $('input[name="nightly_active"]').prop("checked")?"1":"0";
   data["notify_active"] = $('input[name="notify_active"]').prop("checked")?"1":"0";
   data["emergency_active"] = $('input[name="emergency_active"]').prop("checked")?"1":"0";
-
-  // ラジオボタンの値の取得
-  data["refill_trigger"] = $('input[name="refill_trigger"]:checked').val();
-  printDebugMessage("trigger=" + $('input[name="refill_trigger"]:checked').val());
+  data["refill_trigger"] = $('input[name="refill_trigger"]').prop("checked")?"1":"0";
 
   // 時刻指定なしにしたいとき（マイナス値は無効）
   const items = ["time_spot1", "time_spot2", "time_spot3", 
