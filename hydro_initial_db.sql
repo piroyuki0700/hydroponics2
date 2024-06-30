@@ -180,7 +180,7 @@ CREATE TABLE `setting_schedule` (
   `spot_on` int(11) DEFAULT NULL,
   `refill_trigger` int(11) DEFAULT NULL,
   `refill_max` int(11) DEFAULT NULL,
-  `refill_min` int(11) DEFAULT NULL,
+  `refill_days` int(11) DEFAULT NULL,
   `camera1` int(11) DEFAULT NULL,
   `camera2` int(11) DEFAULT NULL,
   `camera3` int(11) DEFAULT NULL,

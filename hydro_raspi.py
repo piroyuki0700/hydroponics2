@@ -50,11 +50,14 @@ gpio_echo = 4
 SONAR_TIMEOUT = (30 / 1000) # ms
 # 水面までの距離の有効範囲
 VALID_DISTANCE_MIN = 3
-VALID_DISTANCE_MAX = 30
+VALID_DISTANCE_MAX = 32
 # センサーから底までの距離
 SENSOR_DISTANCE = 29
 # 満水時の水位
-WATER_LEVEL_FULL = 21
+WATER_LEVEL_FULL = 20
+
+# 水の補充のチェック間隔
+WATER_REFILL_INTERVAL = 3
 
 # 各センサーのリトライ回数とディレイ
 RETRY_TEMPHUMID_MAX = 5
@@ -175,7 +178,6 @@ class CHydroRaspiController():
 		if measured == True:
 			# %を計算（0～に制限）
 			water_level = int((SENSOR_DISTANCE - distance) * 100 / WATER_LEVEL_FULL)
-#			water_level = min(100, max(water_level, 0))
 			water_level = max(water_level, 0)
 			if 0 <= water_level:
 				result = {'distance': float(f"{distance:.1f}"), 'water_level': water_level}
@@ -197,7 +199,7 @@ class CHydroRaspiController():
 			time.sleep(0.1)
 			value = bus.read_byte(adda_address)     # 2回読まないとあまり変化しない
 			self.logger.debug(f"{i}: {value}")
-			if 5 < value and value < 100:
+			if 10 <= value and value < 100:
 				measured = True
 				break
 			time.sleep(RETRY_TDS_DELAY)
@@ -317,7 +319,7 @@ class CHydroRaspiController():
 		return ret
 		
 	# サブタンクからの水補充
-	def subpump_exec(self, min, max, lap_callback=None):
+	def subpump_exec(self, max, lap_callback=None):
 		self.logger.debug("called")
 		self.event_subpump.clear()
 
@@ -328,8 +330,8 @@ class CHydroRaspiController():
 		remain = max
 		current = 0
 		while 0 < remain:
-			if min < remain:
-				current = min
+			if WATER_REFILL_INTERVAL < remain:
+				current = WATER_REFILL_INTERVAL
 			else:
 				current = remain
 			remain -= current
@@ -352,7 +354,9 @@ class CHydroRaspiController():
 		self.event_subpump.clear()
 
 		end_time = datetime.now()
-		past = int((end_time - start_time).total_seconds()) + 1
+		past = int((end_time - start_time).total_seconds())
+		if past == 0:
+			past = past + 1
 
 		empty = not self.subpump_available()
 		return {'past': past, 'empty': empty}

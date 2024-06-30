@@ -30,7 +30,7 @@ MINUTE_REFILL = 55
 DEFAULT_ONTIME = 7 * 60
 DEFAULT_OFFTIME = 8 * 60
 
-SUBPUMP_MANUAL_SECONDS = 60
+SUBPUMP_MANUAL_SECONDS = 120
 
 SAVE_PICTURE_DIR = 'picture'
 TMP_PICTURE_DIR = 'tmp_picture'
@@ -314,6 +314,8 @@ class CHydroMainController():
 			self.raspi_ctl.circulator_switch(False)
 			if int(self.schedule['nightly_active']):
 				self.raspi_ctl.nightly_switch(True)
+			if self.schedule['time_night'] == now.hour and (now.day % self.schedule['refill_days']) == 0:
+				self.subpump_trigger_switch({'option': 'must'})
 		else:
 			self.raspi_ctl.nightly_switch(False)
 			if self.schedule['time_evening'] <= now.hour:
@@ -777,8 +779,9 @@ class CHydroMainController():
 		if perform_refill:
 			available = self.raspi_ctl.subpump_available()
 			if available:
-				level = self.raspi_ctl.measure_water_level()['water_level']
-				self.future_subpump = self.executor_subpump.submit(self.subpump_main_switch, level)
+				level_result = self.raspi_ctl.measure_water_level()
+				level_before = level_result['water_level'] if 'water_level' in level_result else -1
+				self.future_subpump = self.executor_subpump.submit(self.subpump_main_switch, level_before)
 				message = "水位低下 サブポンプ動作開始"
 			else:
 				message = "## 危険 ## 水位低下、サブタンクの水がありません。"
@@ -791,7 +794,7 @@ class CHydroMainController():
 		self.logger.debug("called")
 
 		self.websocketd.broadcast(self.subpump_status_command(True))
-		result = self.raspi_ctl.subpump_exec(self.schedule['refill_min'], self.schedule['refill_max'])
+		result = self.raspi_ctl.subpump_exec(self.schedule['refill_max'])
 		message = f"{result['past']}秒間、水を追加しました。"
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
@@ -799,7 +802,8 @@ class CHydroMainController():
 		upper = self.raspi_ctl.check_float_upper()
 		lower = self.raspi_ctl.check_float_lower()
 		subp = self.raspi_ctl.subpump_available()
-		level_after = self.raspi_ctl.measure_water_level()['water_level']
+		level_result = self.raspi_ctl.measure_water_level()
+		level_after = level_result['water_level'] if 'water_level' in level_result else -1
 
 		message += f"水位低下→上:{upper} 下:{lower} 補:{subp} （{level_before}％→{level_after}％）"
 		self.logger.debug(message)
@@ -855,12 +859,12 @@ class CHydroMainController():
 		self.logger.debug("called")
 
 		seconds = self.schedule['refill_max'] - level_before
-		if seconds < self.schedule['refill_min']:
-			seconds = self.schedule['refill_min']
+		if seconds <= 0:
+			seconds = 1
 		self.logger.debug(f"seconds={seconds}")
 
 		self.websocketd.broadcast(self.subpump_status_command(True))
-		result = self.raspi_ctl.subpump_exec(self.schedule['refill_min'], seconds)
+		result = self.raspi_ctl.subpump_exec(seconds)
 		message = f"{result['past']}秒間、水を追加しました。"
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
@@ -930,7 +934,7 @@ class CHydroMainController():
 
 	def subpump_manual(self, request):
 		self.logger.debug("called")
-		result = self.raspi_ctl.subpump_exec(self.schedule['refill_min'], SUBPUMP_MANUAL_SECONDS, self.subpump_lap)
+		result = self.raspi_ctl.subpump_exec(SUBPUMP_MANUAL_SECONDS, self.subpump_lap)
 		self.websocketd.broadcast(self.subpump_update(request))
 		self.logger.debug("end")
 		return True

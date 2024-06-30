@@ -330,7 +330,7 @@ function setValueSchedule(data)
   $('input[name="time_spot3"]').val(data['time_spot3']);
   $('input[name="spot_on"]').val(data['spot_on']);
   $('input[name="refill_trigger"]').val([data['refill_trigger']]);
-  $('input[name="refill_min"]').val(data['refill_min']);
+  $('input[name="refill_days"]').val(data['refill_days']);
   $('input[name="refill_max"]').val(data['refill_max']);
   $('input[name="camera1"]').val(data['camera1']);
   $('input[name="camera2"]').val(data['camera2']);
