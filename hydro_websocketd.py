@@ -280,6 +280,8 @@ class CHydroMainController():
 			inactive_string = 'inactive'
 			if now.minute == MINUTE_START:
 				self.trigger_start(now, activate, ontime, offtime)
+				if self.schedule['time_night'] == now.hour and (now.day % self.schedule['refill_days']) == 0:
+					self.subpump_trigger_switch({'option': 'must'})
 			else:
 				self.logger.error(f"timer might expire at the wrong time.")
 				inactive_string = 'recovery'
@@ -314,8 +316,6 @@ class CHydroMainController():
 			self.raspi_ctl.circulator_switch(False)
 			if int(self.schedule['nightly_active']):
 				self.raspi_ctl.nightly_switch(True)
-			if self.schedule['time_night'] == now.hour and (now.day % self.schedule['refill_days']) == 0:
-				self.subpump_trigger_switch({'option': 'must'})
 		else:
 			self.raspi_ctl.nightly_switch(False)
 			if self.schedule['time_evening'] <= now.hour:
