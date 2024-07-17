@@ -319,7 +319,7 @@ class CHydroRaspiController():
 		return ret
 		
 	# サブタンクからの水補充
-	def subpump_exec(self, max, lap_callback=None):
+	def subpump_exec(self, max, check_sub=True, lap_callback=None):
 		self.logger.debug("called")
 		self.event_subpump.clear()
 
@@ -340,7 +340,7 @@ class CHydroRaspiController():
 			if ret is True:
 				self.logger.debug("subpump canceled.")
 				break # キャンセルされたとき
-			if self.subpump_available() is False:
+			if check_sub is True and self.subpump_available() is False:
 				self.logger.debug("subpump stop (not available)")
 				break # サブタンクの水がなくなったとき
 			if self.check_float_upper() is True:

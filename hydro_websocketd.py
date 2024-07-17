@@ -280,7 +280,7 @@ class CHydroMainController():
 			inactive_string = 'inactive'
 			if now.minute == MINUTE_START:
 				self.trigger_start(now, activate, ontime, offtime)
-				if self.schedule['time_night'] == now.hour and (now.day % self.schedule['refill_days']) == 0:
+				if (self.schedule['time_night'] + 1) == now.hour and (now.day % self.schedule['refill_days']) == 0:
 					self.subpump_trigger_switch({'option': 'must'})
 			else:
 				self.logger.error(f"timer might expire at the wrong time.")
@@ -934,7 +934,7 @@ class CHydroMainController():
 
 	def subpump_manual(self, request):
 		self.logger.debug("called")
-		result = self.raspi_ctl.subpump_exec(SUBPUMP_MANUAL_SECONDS, self.subpump_lap)
+		result = self.raspi_ctl.subpump_exec(SUBPUMP_MANUAL_SECONDS, False, self.subpump_lap)
 		self.websocketd.broadcast(self.subpump_update(request))
 		self.logger.debug("end")
 		return True
