@@ -281,7 +281,7 @@ class CHydroMainController():
 			if now.minute == MINUTE_START:
 				self.trigger_start(now, activate, ontime, offtime)
 				if (self.schedule['time_night'] + 1) == now.hour and (now.day % self.schedule['refill_days']) == 0:
-					self.subpump_trigger_switch({'option': 'must'})
+					self.subpump_trigger_switch({'option': 'must', 'mul': 2})
 			else:
 				self.logger.error(f"timer might expire at the wrong time.")
 				inactive_string = 'recovery'
@@ -542,14 +542,14 @@ class CHydroMainController():
 
 	def sensor_error(self, sensor):
 		over_limit = self.db_manage.countup_sensor_error(sensor, SENSOR_ERROR_COUNT_LIMIT)
-		if over_limit:
+		if int(self.schedule['emergency_active']) and over_limit:
 			self.line_notify(f"{sensor}センサー故障？{SENSOR_ERROR_COUNT_LIMIT}回連続計測失敗")
 
 	def trigger_stop(self):
 		self.logger.debug("called")
 		self.switcher.stop()
 
-	def subpump_refill(self, request=None):
+	def subpump_refill(self, request={}):
 		self.logger.debug("called")
 		if self.schedule['refill_trigger'] == REFILL_TRIGGER_SWITCH:
 			self.subpump_trigger_switch(request)
@@ -770,31 +770,36 @@ class CHydroMainController():
 
 	def subpump_trigger_switch(self, request):
 		self.logger.debug("called")
+		upper = False
 		perform_refill = False
-		if request != None and request['option'] == "must":
+		mul = 1
+		if 'option' in request and request['option'] == 'must':
 			perform_refill = not self.raspi_ctl.check_float_upper()
 		else:
 			perform_refill = not self.raspi_ctl.check_float_lower()
+		if 'mul' in request:
+			mul = int(request['mul'])
 
 		if perform_refill:
 			available = self.raspi_ctl.subpump_available()
 			if available:
 				level_result = self.raspi_ctl.measure_water_level()
 				level_before = level_result['water_level'] if 'water_level' in level_result else -1
-				self.future_subpump = self.executor_subpump.submit(self.subpump_main_switch, level_before)
+				self.future_subpump = self.executor_subpump.submit(self.subpump_main_switch, level_before, mul)
 				message = "水位低下 サブポンプ動作開始"
 			else:
 				message = "## 危険 ## 水位低下、サブタンクの水がありません。"
-				self.line_notify(message)
+				if int(self.schedule['emergency_active']):
+					self.line_notify(message)
 		else:
 			message = "水位問題なし"
 		self.logger.debug(message)
 
-	def subpump_main_switch(self, level_before):
+	def subpump_main_switch(self, level_before, mul=1):
 		self.logger.debug("called")
 
 		self.websocketd.broadcast(self.subpump_status_command(True))
-		result = self.raspi_ctl.subpump_exec(self.schedule['refill_max'])
+		result = self.raspi_ctl.subpump_exec(self.schedule['refill_max'] * mul)
 		message = f"{result['past']}秒間、水を追加しました。"
 		if result['empty'] == True:
 			message += "サブタンクの水がなくなりました\n"
@@ -844,7 +849,8 @@ class CHydroMainController():
 						message = f"水位{level}％ サブポンプ動作開始"
 					else:
 						message = f"## 危険 ## 水位{level}％、サブタンクの水がありません。"
-						self.line_notify(message)
+						if int(self.schedule['emergency_active']):
+							self.line_notify(message)
 				else:
 					message = f"水位{level}％、次回補充（前回値{self.prev_level}％）"
 			elif level < limit['water_level_low']:
